@@ -700,3 +700,140 @@ Un utilisateur ne doit pas sentir la complexité des permissions, relations, ind
 Il doit simplement avoir l'impression :
 
 **« Je sais où je suis. Je vois ce qui compte. Je peux agir tout de suite. »**
+
+
+## 32. Inscription libre, accès administré
+
+Un utilisateur peut créer seul son compte Boralog. L'inscription crée une identité Boralog, **pas un droit automatique sur les données internes d'une structure**.
+
+Modèle :
+
+**Compte → appartenance à une structure → appartenance à des projets → rôles → permissions**
+
+Lorsqu'une personne rejoint une structure ou un projet :
+
+- un socle d'informations peut être visible par défaut à tous les membres concernés ;
+- les informations sensibles restent fermées par défaut ;
+- les administrateurs autorisés attribuent les accès supplémentaires ;
+- un administrateur ne peut déléguer que les pouvoirs que son niveau d'administration lui permet de déléguer ;
+- le propriétaire/responsable principal conserve les pouvoirs critiques.
+
+La messagerie et la consultation sont deux sujets différents : un membre peut être autorisé à contacter les autres membres de son espace professionnel sans pour autant pouvoir consulter leurs données administratives sensibles.
+
+Catégories d'accès envisagées :
+
+- commun aux membres du projet ;
+- équipe/rôle concerné ;
+- personnes choisies ;
+- administrateurs ;
+- propriétaire/responsable uniquement.
+
+Ces règles doivent être appliquées dans la base et côté serveur, pas seulement par l'affichage de l'interface.
+
+## 33. Rubriques personnalisables par les administrateurs
+
+Boralog doit avoir un **socle métier standard** pour que le produit soit immédiatement utilisable, sans devenir un système entièrement vide à configurer.
+
+Mais les structures ont des pratiques différentes. Un administrateur autorisé doit donc pouvoir créer des **rubriques types** supplémentaires sans développement informatique.
+
+Exemples :
+
+- Catering ;
+- Costumes ;
+- Presse ;
+- Accueil scolaire ;
+- Backline ;
+- Invités ;
+- Merchandising ;
+- besoins particuliers propres à une compagnie.
+
+Une rubrique personnalisée peut définir :
+
+- nom ;
+- description courte ;
+- icône parmi une bibliothèque contrôlée ;
+- type de projet/date auquel elle s'applique ;
+- champs nécessaires ;
+- ordre des champs ;
+- champs obligatoires ou facultatifs ;
+- droits de lecture ;
+- droits de modification ;
+- responsable par défaut ;
+- visibilité par défaut ;
+- éventuellement modèle réutilisable.
+
+Types de champs autorisés au départ :
+
+- texte court ;
+- texte long ;
+- nombre ;
+- montant ;
+- date ;
+- heure ;
+- oui/non ;
+- choix unique ;
+- choix multiple ;
+- personne ;
+- lien ;
+- référence à un objet Boralog existant.
+
+Ne pas permettre aux administrateurs de créer arbitrairement du code ou des composants. Ils configurent des briques sûres fournies par Boralog.
+
+Principe essentiel :
+
+**personnalisable sans devenir chaotique.**
+
+Les rubriques personnalisées doivent utiliser exactement le même design system que les rubriques natives. L'utilisateur ne doit pas avoir l'impression d'entrer dans un autre logiciel.
+
+## 34. Modèles de structure
+
+Une structure pourra éventuellement enregistrer un ensemble de rubriques et réglages comme modèle.
+
+Exemple :
+
+**Modèle “Tournée danse”**
+- Transport ;
+- Hôtel ;
+- Catering ;
+- Technique ;
+- Costumes ;
+- Feuille de route.
+
+Lors de la création d'une nouvelle date, ce modèle peut préparer automatiquement les rubriques utiles.
+
+Les modèles doivent éviter la ressaisie, pas créer des centaines de champs inutiles.
+
+## 35. Administration des rubriques : interface
+
+L'écran de configuration doit rester beaucoup plus simple qu'un constructeur de base de données.
+
+Parcours envisagé :
+
+**Administration → Rubriques → Nouvelle rubrique**
+
+Puis :
+
+1. nommer ;
+2. choisir les quelques champs nécessaires ;
+3. choisir qui voit ;
+4. choisir qui peut modifier ;
+5. choisir où la rubrique apparaît ;
+6. prévisualiser ;
+7. publier.
+
+La prévisualisation téléphone et ordinateur doit être disponible avant publication.
+
+## 36. Doctrine de personnalisation
+
+Boralog suit trois niveaux :
+
+**Niveau 1 — Standard Boralog**
+Les fonctions communes au spectacle vivant, conçues et maintenues par le produit.
+
+**Niveau 2 — Configuration**
+Une structure active/désactive certains modules, définit ses rôles et ses modèles.
+
+**Niveau 3 — Rubriques personnalisées**
+La structure ajoute ses besoins spécifiques à partir de briques contrôlées.
+
+Ne pas aller vers un “no-code builder” illimité tant que le besoin n'est pas démontré. Trop de liberté peut détruire la cohérence, la recherche et la simplicité qui constituent précisément la valeur de Boralog.
