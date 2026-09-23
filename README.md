@@ -24,6 +24,6 @@ Les échanges professionnels restent simples, mais les informations utiles devie
 
 ## Documentation
 
-La vision produit détaillée et évolutive est conservée dans [docs/VISION_PRODUIT.md](docs/VISION_PRODUIT.md).
+La vision produit détaillée et évolutive est conservée dans [docs/VISION_PRODUIT.md](docs/VISION_PRODUIT.md).\n\nLa doctrine d'ergonomie, de navigation, de stockage et d'architecture technique est conservée dans [docs/DOCTRINE_UX_TECHNIQUE.md](docs/DOCTRINE_UX_TECHNIQUE.md).
 
 Ce document est volontairement vivant : il sera corrigé, complété et simplifié à mesure que les besoins réels seront vérifiés.
