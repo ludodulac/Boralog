@@ -1,0 +1,702 @@
+# Boralog — Doctrine UX et architecture technique
+
+> Statut : document vivant.
+>
+> Ce document décrit **comment Boralog doit être construit et se comporter** pour rester extrêmement simple, rapide, lisible et agréable sur téléphone comme sur ordinateur. Il complète `VISION_PRODUIT.md`, qui décrit surtout **quoi** construire et **pourquoi**.
+
+## 1. Ambition d'expérience
+
+Boralog doit donner l'impression d'un logiciel professionnel très simple, pas d'un site administratif.
+
+Les qualités recherchées :
+
+- immédiat ;
+- calme ;
+- lisible ;
+- rapide ;
+- prévisible ;
+- peu de saisie ;
+- très peu de niveaux de navigation ;
+- aucune fonction importante cachée derrière une interface obscure ;
+- beau par la qualité de la hiérarchie, de l'espace et des détails, pas par des effets décoratifs ;
+- utilisable d'une main sur téléphone pour les actions courantes ;
+- beaucoup plus dense sur grand écran sans devenir un autre produit.
+
+Le critère ultime n'est pas « combien de fonctions avons-nous ? », mais :
+
+**« Combien d'effort faut-il à quelqu'un pour trouver, comprendre ou modifier l'information dont il a besoin ? »**
+
+## 2. Principes UX non négociables
+
+### 2.1 Reconnaître plutôt que mémoriser
+
+L'utilisateur ne doit pas se souvenir de l'endroit où une information a été rangée.
+
+Le produit doit fournir :
+
+- navigation visible ;
+- noms explicites ;
+- contexte visible ;
+- recherches et suggestions ;
+- éléments récents ;
+- favoris si cela devient utile ;
+- historique des derniers projets/dates consultés.
+
+Éviter les icônes mystérieuses sans libellé pour les fonctions importantes.
+
+### 2.2 Divulgation progressive
+
+Ne pas montrer 40 commandes parce que Boralog sait faire 40 choses.
+
+Montrer d'abord ce qui sert maintenant. Les fonctions rares ou avancées apparaissent ensuite dans un niveau secondaire clairement nommé.
+
+Exemple sur une date :
+
+**État essentiel**
+- horaire ;
+- équipe ;
+- voyage ;
+- hébergement ;
+- alertes.
+
+Puis :
+**Voir administration**, **Voir documents**, **Voir détails techniques**, etc.
+
+### 2.3 Le contexte avant le menu
+
+Quand l'utilisateur est dans « Brest — XXX — 17 octobre », les actions proposées doivent concerner Brest.
+
+Éviter de le renvoyer constamment dans un menu général pour agir.
+
+### 2.4 Une action fréquente doit être courte
+
+Objectif de conception, à tester et non à appliquer aveuglément :
+
+- information courante : visible immédiatement ou en 1 action ;
+- action fréquente : 1 à 3 actions simples ;
+- action rare/complexe : peut demander davantage d'étapes si cela évite les erreurs.
+
+Ne jamais réduire artificiellement le nombre de clics au prix de la compréhension.
+
+### 2.5 Une page = une intention dominante
+
+Une page peut contenir beaucoup d'informations, mais l'utilisateur doit comprendre immédiatement :
+
+- où il est ;
+- ce qui est important ;
+- ce qu'il peut faire maintenant.
+
+## 3. Navigation : téléphone
+
+### 3.1 Barre principale basse
+
+Sur petit écran, envisager une barre fixe avec au maximum 4 ou 5 destinations très stables :
+
+- Aujourd'hui ;
+- Messages ;
+- Projets ;
+- Recherche ;
+- Moi / Plus.
+
+Le choix définitif devra être testé avec de vrais utilisateurs.
+
+### 3.2 Bouton d'action contextuel
+
+Une action très fréquente peut être accessible immédiatement :
+
+**+ Message**, **+ Info**, **+ Action** ou un bouton contextuel selon l'écran.
+
+Éviter un bouton « + » dont le sens change de façon imprévisible.
+
+### 3.3 Pas de menu hamburger comme unique porte d'entrée
+
+Le menu secondaire peut exister, mais les fonctions quotidiennes doivent rester visibles.
+
+### 3.4 Scroll : oui, labyrinthe : non
+
+Le scroll vertical est naturel sur téléphone. Il ne faut donc pas chercher à tout faire tenir artificiellement sur un écran.
+
+En revanche :
+
+- jamais de scroll horizontal pour lire une page normale ;
+- les informations prioritaires restent en haut ;
+- les sections longues sont regroupées ;
+- possibilité de replier les détails secondaires ;
+- en-tête contextuel compact éventuellement collant ;
+- retour clair au niveau précédent.
+
+Le problème n'est pas de scroller. Le problème est de scroller sans savoir où l'on va ni où se trouve l'information.
+
+### 3.5 Zones tactiles
+
+Cible interne Boralog : viser environ **44–48 px minimum** pour les commandes tactiles fréquentes, avec suffisamment d'espace entre elles.
+
+Les petites icônes visuelles peuvent exister, mais leur zone réellement cliquable doit être confortable.
+
+### 3.6 Pas d'interaction uniquement par glissement
+
+Un swipe ou drag peut être un raccourci, jamais la seule façon d'accomplir une action essentielle.
+
+## 4. Navigation : ordinateur
+
+Sur grand écran, profiter de la largeur au lieu d'étirer la version mobile.
+
+Structure envisagée :
+
+- colonne de navigation stable à gauche ;
+- contenu principal au centre ;
+- panneau contextuel facultatif à droite pour détails, participants ou actions.
+
+Exemple :
+
+**gauche** : projets / messages / recherche  
+**centre** : conversation ou dossier de date  
+**droite** : informations de la date / participants / actions
+
+L'utilisateur peut ainsi lire une conversation tout en gardant son contexte sans ouvrir cinq pages.
+
+## 5. Même produit, deux compositions
+
+Ne pas construire « Boralog mobile » et « Boralog desktop » séparément.
+
+Les mêmes objets, permissions, actions et données existent partout.
+
+Seule la composition change :
+
+- téléphone : une colonne et navigation progressive ;
+- tablette : une ou deux colonnes ;
+- ordinateur : deux ou trois zones quand cela améliore réellement le travail.
+
+Le responsive doit suivre l'espace réellement disponible, pas seulement des modèles d'appareils.
+
+## 6. Hiérarchie de navigation métier
+
+Chemin conceptuel principal :
+
+**Structure → Spectacle → Date → Information / conversation / action**
+
+Mais l'utilisateur ne doit pas toujours parcourir toute cette hiérarchie.
+
+Des raccourcis doivent permettre d'arriver directement par :
+
+- Aujourd'hui ;
+- notification ;
+- recherche ;
+- message récent ;
+- projet récent ;
+- personne ;
+- date.
+
+Le contexte affiché doit toujours permettre de comprendre où l'on se trouve.
+
+## 7. Recherche universelle
+
+La recherche est une fonction centrale, pas un accessoire.
+
+Une seule recherche doit pouvoir trouver progressivement :
+
+- personne ;
+- structure ;
+- spectacle ;
+- ville ;
+- date ;
+- message ;
+- mot contenu dans un message ;
+- document référencé ;
+- facture ;
+- contrat ;
+- tâche.
+
+Les résultats doivent être regroupés par nature et afficher leur contexte.
+
+Exemple :
+
+**« Pierre »**
+
+- Pierre Martin — artiste ;
+- 8 messages ;
+- 3 dates à venir ;
+- 1 information manquante.
+
+L'autocomplétion et les suggestions réduisent l'effort de mémoire.
+
+## 8. Écrans prioritaires envisagés
+
+### Aujourd'hui
+
+Ne pas faire un tableau de bord décoratif.
+
+Afficher ce qui demande une attention réelle :
+
+- mes décisions ;
+- mes actions ;
+- informations manquantes ;
+- changements importants ;
+- échéances ;
+- messages qui m'attendent.
+
+### Messages
+
+Conversation rapide et sobre.
+
+Toujours afficher clairement :
+
+- qui participe ;
+- à quel projet/date la conversation est reliée ;
+- niveau d'accès ;
+- actions permettant de transformer un message en donnée métier.
+
+### Projet / spectacle
+
+Résumé immédiatement compréhensible :
+
+- prochaines dates ;
+- état des sujets importants ;
+- équipe ;
+- conversations ;
+- documents ;
+- alertes.
+
+### Date
+
+Écran métier majeur.
+
+Résumé en premier, détails ensuite.
+
+### Recherche
+
+Accessible de presque partout et rapide dès la première frappe.
+
+## 9. Formulaires
+
+Les formulaires sont un risque majeur de lourdeur.
+
+Règles :
+
+- ne demander que ce qui est nécessaire maintenant ;
+- préremplir ce qui est déjà connu ;
+- ne jamais demander deux fois la même donnée ;
+- utiliser le bon clavier mobile (date, téléphone, nombre, email) ;
+- proposer des valeurs existantes plutôt que faire retaper ;
+- sauvegarde automatique des brouillons lorsque raisonnable ;
+- erreurs expliquées près du champ ;
+- validation destructrice uniquement quand nécessaire ;
+- possibilité d'annuler ou restaurer quand c'est possible.
+
+Préférer :
+
+**Ajouter arrivée**
+- personne ;
+- jour ;
+- heure.
+
+à un formulaire de 15 champs dont 12 sont facultatifs.
+
+## 10. Lisibilité et identité visuelle
+
+Le design « sexy » recherché doit venir de la précision.
+
+Principes :
+
+- typographie très lisible ;
+- peu de tailles de texte différentes ;
+- contraste élevé ;
+- beaucoup d'espace utile ;
+- alignements rigoureux ;
+- couleurs utilisées pour le sens, jamais comme seul moyen de transmettre le sens ;
+- états explicites par mots : « À faire », « En attente », « Bloqué », « Terminé » ;
+- animations courtes et fonctionnelles seulement ;
+- pas d'effets lourds ou gratuits ;
+- composants cohérents partout.
+
+Une interface professionnelle inspire confiance parce qu'elle semble stable et évidente.
+
+## 11. Accessibilité comme qualité générale
+
+Cible : WCAG 2.2 AA au minimum pour le produit web.
+
+Inclure dès le départ :
+
+- navigation clavier ;
+- focus clairement visible ;
+- ordre de tabulation logique ;
+- libellés accessibles ;
+- contraste suffisant ;
+- zoom texte sans perte de fonction ;
+- zones tactiles confortables ;
+- alternatives aux gestes de glissement ;
+- messages d'erreur compréhensibles ;
+- aucune information communiquée uniquement par une couleur.
+
+L'accessibilité ne sera pas ajoutée à la fin.
+
+## 12. Stockage : ne pas confondre « léger » et « tout en texte »
+
+Boralog doit être léger, mais la bonne solution n'est pas de stocker toute la réalité dans de grandes phrases.
+
+### 12.1 Données structurées à stocker en base
+
+Exemples :
+
+- identifiants ;
+- noms ;
+- emails/téléphones professionnels nécessaires ;
+- dates et heures ;
+- lieux ;
+- rôles ;
+- permissions ;
+- participants ;
+- relations structure/spectacle/date ;
+- messages texte ;
+- statuts ;
+- tâches ;
+- échéances ;
+- montants ;
+- références de factures ;
+- métadonnées de documents ;
+- historique des changements.
+
+Ces données occupent très peu de place comparées aux médias et permettent recherche, tri, filtres et automatisations fiables.
+
+### 12.2 Types de données
+
+Utiliser des types adaptés :
+
+- texte pour le texte ;
+- date/heure pour les dates ;
+- nombre décimal pour les montants ;
+- booléen pour oui/non ;
+- identifiants pour les relations ;
+- JSON/JSONB uniquement lorsque la structure flexible le justifie.
+
+Ne pas enregistrer « 12 mai 2027 à 18h, payé oui, 450 euros » dans une seule chaîne de texte si ces valeurs doivent être utilisées séparément.
+
+## 13. Fichiers : stratégie minimaliste
+
+L'objectif n'est pas forcément **zéro fichier**. Un logiciel de production aura probablement besoin de contrats, feuilles de route, fiches techniques, RIB, justificatifs ou photos de communication.
+
+Doctrine :
+
+1. **La base de données ne contient pas les gros fichiers binaires.**
+2. Elle conserve leurs métadonnées et références.
+3. Les fichiers sont stockés dans un stockage objet séparé ou, lorsque cela convient, référencés depuis le système documentaire existant.
+4. Pas de duplication automatique de gros fichiers.
+5. Taille maximale et types autorisés définis par usage.
+6. Compression/optimisation lorsque pertinente.
+7. Les vidéos et gros médias ne sont pas un objectif de la V1.
+8. Un document externe peut être représenté par une URL + titre + type + droits + relation au projet.
+
+Cela garde le cœur très léger sans rendre le produit inutilisable.
+
+## 14. Ce qu'il faut probablement stocker en plus du texte
+
+Même avec une philosophie très légère :
+
+- dates/heures ;
+- nombres/montants ;
+- identifiants ;
+- permissions ;
+- relations entre objets ;
+- états ;
+- historique d'audit ;
+- préférences minimales ;
+- références vers fichiers ;
+- éventuellement petites images de profil optimisées, mais elles ne sont pas essentielles.
+
+Les données structurées sont petites. Le poids vient surtout des images, PDF lourds, audio et vidéo.
+
+## 15. Historique et traçabilité
+
+Comme plusieurs personnes peuvent modifier la même information, Boralog doit pouvoir répondre :
+
+- qui a changé quoi ?
+- quand ?
+- ancienne valeur ?
+- nouvelle valeur ?
+
+Cela permet de collaborer sans peur.
+
+Pour les données importantes, préférer un historique append-only ou un journal d'événements plutôt que perdre silencieusement l'ancienne valeur.
+
+## 16. Permissions techniques
+
+Les droits doivent être vérifiés côté serveur, pas seulement cachés dans l'interface.
+
+Principes :
+
+- refus par défaut ;
+- privilège minimum ;
+- accès accordé explicitement selon structure, rôle, relation ou objet ;
+- les contrôles UI améliorent l'expérience mais ne constituent jamais la sécurité ;
+- journaliser les opérations sensibles ;
+- tester automatiquement les règles d'autorisation.
+
+Les conversations privées professionnelles nécessitent une attention particulière : une personne non autorisée ne doit pas pouvoir les obtenir en modifiant une URL ou une requête.
+
+## 17. Performance
+
+Boralog doit sembler instantané même sur un téléphone moyen et un réseau imparfait.
+
+Principes :
+
+- HTML/CSS/JavaScript aussi sobres que possible ;
+- charger d'abord le contenu nécessaire ;
+- pagination ou chargement progressif des longues conversations ;
+- indexer les recherches et filtres ;
+- éviter les bibliothèques lourdes sans bénéfice réel ;
+- limiter les animations ;
+- mettre en cache intelligemment les ressources stables ;
+- afficher immédiatement un état de chargement utile plutôt qu'un écran vide.
+
+Mesurer réellement les performances sur mobile, pas seulement sur ordinateur de développement.
+
+## 18. PWA et réseau imparfait
+
+Boralog devrait être étudié comme **Progressive Web App (PWA)** :
+
+- fonctionne dans le navigateur ;
+- peut être installable sur l'écran d'accueil lorsque la plateforme le permet ;
+- une seule base de code web ;
+- cache de l'interface ;
+- possibilité future de consulter certaines informations récentes hors connexion ;
+- possibilité future de saisir une action hors connexion puis la synchroniser.
+
+Attention : le hors-ligne complet et la résolution de conflits peuvent devenir complexes. Commencer par une expérience réseau faible robuste, puis ajouter le hors-ligne selon les besoins réels.
+
+Ne jamais mettre en cache local des données sensibles sans stratégie de sécurité explicite.
+
+## 19. Notifications
+
+Préférer des notifications utiles à un flux incessant.
+
+Catégories :
+
+- message direct ;
+- changement qui affecte ma responsabilité ;
+- tâche assignée ;
+- échéance ;
+- blocage ;
+- information manquante.
+
+Prévoir :
+
+- centre de notifications interne ;
+- réglages par catégorie ;
+- regroupement ;
+- lecture/non lu ;
+- liens directs vers le bon contexte.
+
+Push mobile seulement si cela apporte une valeur réelle.
+
+## 20. Architecture de données conceptuelle
+
+Objets fondamentaux probables :
+
+- User
+- Organization
+- Membership
+- Role / Permission
+- Project / Show
+- Event / Performance / Residency
+- Person / Contact
+- Conversation
+- ConversationParticipant
+- Message
+- StructuredInfo
+- Task
+- Assignment
+- Travel
+- Accommodation
+- DocumentReference
+- Contract
+- Quote
+- Invoice
+- Payment
+- BudgetItem
+- Notification
+- AuditEvent
+
+Les noms définitifs seront choisis au moment du schéma technique.
+
+Le point important : **les objets doivent être reliés**, pas reproduits dans chaque module.
+
+## 21. Architecture technique envisagée, sans la figer trop tôt
+
+Pour un produit web moderne de ce type :
+
+- frontend responsive ;
+- backend/API avec règles métier ;
+- base relationnelle PostgreSQL ;
+- authentification ;
+- autorisations côté serveur ;
+- recherche indexée ;
+- temps réel pour les messages si nécessaire ;
+- stockage objet séparé pour les fichiers ;
+- PWA/cache local uniquement là où cela améliore réellement l'usage.
+
+Ne pas choisir une technologie parce qu'elle est à la mode. La priorité est maintenabilité, sécurité, rapidité et coût raisonnable.
+
+## 22. Design system Boralog
+
+Avant de multiplier les pages, définir un petit système commun :
+
+- échelle typographique ;
+- espacements ;
+- rayons ;
+- boutons primaire/secondaire/destructif ;
+- champs ;
+- cartes ;
+- listes ;
+- badges d'état ;
+- alertes ;
+- avatars ;
+- panneaux ;
+- modales / bottom sheets ;
+- navigation ;
+- états vides ;
+- chargement ;
+- erreur.
+
+Chaque composant doit avoir ses états :
+
+- normal ;
+- hover si pertinent ;
+- focus ;
+- pressé ;
+- désactivé ;
+- chargement ;
+- erreur.
+
+Le design system évite que chaque écran devienne une invention différente.
+
+## 23. Bottom sheets et panneaux contextuels
+
+Sur téléphone, une bottom sheet peut être excellente pour quelques actions contextuelles rapides.
+
+Exemple :
+**Transformer ce message en…**
+- information logistique ;
+- tâche ;
+- document ;
+- autre.
+
+Ne pas empiler plusieurs bottom sheets et toujours offrir une fermeture évidente.
+
+Sur ordinateur, la même fonction peut apparaître dans un panneau latéral.
+
+## 24. Scrolling : doctrine Boralog
+
+Le scroll n'est pas un défaut.
+
+Utiliser le scroll vertical lorsque le contenu forme naturellement une continuité :
+
+- messages ;
+- historique ;
+- liste de dates ;
+- détails d'une fiche.
+
+Préférer navigation/onglets/sections lorsque l'utilisateur change réellement de tâche.
+
+Éviter :
+
+- pages infinies sans repères ;
+- dix accordéons imbriqués ;
+- scroll horizontal ;
+- plusieurs zones de scroll concurrentes sur mobile ;
+- header géant qui consomme l'écran.
+
+## 25. Actions destructrices et erreurs
+
+Pour supprimer, annuler ou modifier une information importante :
+
+- expliquer ce qui va arriver ;
+- permettre Annuler quand possible ;
+- confirmer les actions réellement irréversibles ;
+- ne pas demander confirmation pour chaque micro-action ;
+- ne jamais afficher seulement « Une erreur est survenue » si on peut dire quoi faire.
+
+## 26. Version mobile : priorité aux conditions réelles
+
+Tester avec :
+
+- une main ;
+- écran en extérieur ;
+- connexion médiocre ;
+- téléphone de milieu de gamme ;
+- gros texte / zoom ;
+- interruption puis reprise ;
+- utilisateur pressé entre deux déplacements.
+
+Une interface parfaite sur une maquette desktop n'est pas suffisante.
+
+## 27. Version ordinateur : priorité à l'efficacité
+
+Prévoir pour les utilisateurs intensifs :
+
+- raccourcis clavier facultatifs ;
+- recherche immédiate ;
+- multi-panneaux raisonnés ;
+- copier/coller ;
+- sélection efficace ;
+- actions groupées seulement quand elles sont sûres ;
+- densité d'information supérieure au mobile.
+
+Le novice doit pouvoir tout faire sans connaître les raccourcis.
+
+## 28. Mesure de qualité UX
+
+Avant de déclarer un écran réussi, tester des scénarios concrets.
+
+Exemples :
+
+- retrouver l'heure d'arrivée de Pierre pour Brest ;
+- voir ce qui manque pour une date ;
+- envoyer un message à l'équipe logistique ;
+- transformer un message en information officielle ;
+- savoir qui a changé un horaire ;
+- retrouver une facture ;
+- comprendre ce qui nécessite mon intervention aujourd'hui.
+
+Mesurer :
+
+- réussite/échec ;
+- temps ;
+- nombre d'actions ;
+- erreurs ;
+- hésitations ;
+- besoin de demander de l'aide.
+
+## 29. Règle « pas de poids inutile »
+
+Avant d'ajouter une dépendance, média ou fonction :
+
+1. apporte-t-elle une valeur fréquente ?
+2. peut-on faire plus simple ?
+3. augmente-t-elle le temps de chargement ?
+4. ajoute-t-elle une maintenance durable ?
+5. crée-t-elle une nouvelle source de vérité ?
+6. peut-on la différer ?
+
+Boralog doit rester petit techniquement même s'il devient riche fonctionnellement.
+
+## 30. Références de conception à maintenir
+
+Sources de référence pour les décisions UX et techniques :
+
+- W3C WCAG 2.2 — accessibilité ;
+- web.dev — responsive, performance, PWA et offline ;
+- Nielsen Norman Group — heuristiques d'utilisabilité, reconnaissance plutôt que rappel, divulgation progressive ;
+- OWASP — autorisations, moindre privilège et sécurité ;
+- documentation PostgreSQL — stockage structuré et indexation.
+
+Les recommandations externes guident le produit ; les tests avec les vrais utilisateurs de Boralog tranchent les choix d'usage.
+
+## 31. Principe final
+
+**La sophistication doit être dans le système, pas dans l'effort demandé à l'utilisateur.**
+
+Un utilisateur ne doit pas sentir la complexité des permissions, relations, index, règles métier ou synchronisations.
+
+Il doit simplement avoir l'impression :
+
+**« Je sais où je suis. Je vois ce qui compte. Je peux agir tout de suite. »**
