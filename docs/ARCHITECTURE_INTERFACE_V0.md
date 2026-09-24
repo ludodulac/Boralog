@@ -365,3 +365,12 @@ Les pages Projet et Date exposent uniquement un résumé compact des tâches per
 Convention du prototype : la vue existante /aujourdhui/a-faire accepte un contexte par paramètres projet, puis éventuellement date. Elle affiche explicitement ce contexte et son lien de retour. Cette convention est une représentation UX ; elle ne crée ni nouvelle tâche ni nouveau stockage.
 
 Règle structurante : **une place de référence, plusieurs représentations ; jamais une copie métier par écran.**
+
+
+## 19. App shell et absence d'impasse
+
+Les routes internes partagent un **AppShell** unique qui porte la navigation globale et le menu secondaire. Les pages métier fournissent leur contenu et leur navigation contextuelle sans recopier manuellement la navigation principale.
+
+Règle : **une page interne ne doit pas devenir une impasse de navigation**. L'utilisateur conserve simultanément son contexte local et l'accès direct aux destinations principales. La profondeur structure → projet → date → objet ne doit jamais obliger à remonter manuellement toute l'arborescence.
+
+Le shell est responsive : navigation principale stable à gauche sur ordinateur ; cinq destinations en navigation basse sur téléphone avec safe area et espace de contenu suffisant. Les barres du navigateur, contrôles système et outils de Deploy Preview sont extérieurs à Boralog et ne doivent faire l'objet d'aucun contournement CSS.
