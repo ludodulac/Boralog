@@ -579,3 +579,16 @@ Boralog ne doit pas devenir une gigantesque liste de tâches. Quatre notions res
 Principe : **les données vivent dans leur contexte → Boralog détermine ce qui demande de l'attention → Aujourd'hui le fait remonter.** L'utilisateur ne doit pas transformer chaque information en tâche pour que Boralog reste utile.
 
 Une future vue calendrier réunira événements, répétitions/rendez-vous et échéances utiles sans les fusionner. Le calendrier est une représentation temporelle de ces objets, jamais leur stockage métier principal.
+
+
+## 23. Information contextualisée et entrée depuis l'extérieur
+
+Une information Boralog n'est pas un texte isolé : elle appartient à un **contexte**. Selon le cas, ce contexte comprend notamment la structure, le projet/spectacle, la date, le domaine et les personnes concernées. Une information de référence peut ensuite être représentée dans plusieurs vues sans être dupliquée comme plusieurs vérités incompatibles.
+
+Une information nouvelle ou modifiée qui concerne une personne peut être portée à sa connaissance dans **Aujourd'hui** avec son projet, sa date éventuelle, son domaine et sa fraîcheur. Cela ne transforme pas automatiquement cette information en tâche. **Information ≠ attention ≠ tâche** : l'information décrit la réalité ; l'attention signale qu'elle mérite explicitement la vigilance de la personne ; la tâche existe lorsqu'un travail doit réellement être accompli.
+
+### Futur point d'entrée par partage mobile
+
+Boralog devra pouvoir recevoir du texte, des liens ou des fichiers partagés depuis des applications extérieures, par exemple un SMS ou WhatsApp : **contenu reçu → choix/confirmation du projet → date éventuelle → domaine → confirmation → information Boralog**.
+
+Cette capacité n'est pas encore implémentée. Boralog ne doit pas aspirer silencieusement les conversations extérieures ni transformer une suggestion de classement en vérité. Une classification automatique future peut proposer un contexte avec un niveau de confiance approprié ; lorsque le contexte est incertain, la confirmation humaine reste la référence.
