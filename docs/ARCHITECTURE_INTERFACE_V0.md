@@ -327,3 +327,30 @@ La même information de référence peut être représentée sur sa page date, d
 Les informations récentes pertinentes peuvent apparaître dans Aujourd'hui avec leur contexte et leur fraîcheur, sans créer automatiquement une tâche.
 
 Un futur point d'entrée de partage depuis le téléphone devra pouvoir recevoir un contenu externe puis demander à l'utilisateur de confirmer projet, date et domaine avant enregistrement. Aucun partage Android/iOS n'est implémenté dans le prototype actuel.
+
+
+## 17. Contrat d'interaction et confidentialité des informations
+
+### Feedback des actions
+
+Les composants de mutation doivent être conçus avec des états explicites : **idle, pending, success, error**. Le pending reflète un traitement réel et peut désactiver temporairement l'action pour prévenir un double envoi. Les chargements de contenu disposent d'un état loading/skeleton. Le succès est confirmé sobrement ; l'erreur reste visible, permet une nouvelle tentative lorsque pertinente et ne détruit pas inutilement la saisie.
+
+Les transitions de navigation immédiates ne doivent pas recevoir artificiellement un spinner.
+
+### Contrat futur de création d'une information
+
+Le composant/formulaire de création d'information doit pouvoir recueillir et afficher avant validation :
+
+**CONTENU → CONTEXTE → DOMAINE → VISIBILITÉ**
+
+Puis, uniquement lorsqu'un travail réel est créé :
+
+**RESPONSABLE → ÉCHÉANCE**
+
+La visibilité appartient à l'information elle-même. Son modèle doit pouvoir cibler différentes audiences (par exemple membres concernés, équipe/rôle, personnes sélectionnées, administration ou accès restreint) sans considérer cette liste comme le schéma final.
+
+L'appartenance à une structure ou à un projet n'accorde jamais implicitement la lecture de toutes ses informations. Les informations sensibles sont **deny-by-default**.
+
+L'interface explique l'audience avant enregistrement, mais l'autorisation effective doit être appliquée côté serveur et base de données. La future architecture Supabase/RLS devra empêcher qu'un utilisateur non autorisé puisse récupérer ou modifier l'information, indépendamment de ce que l'interface affiche.
+
+Le futur point d'entrée par partage externe utilise ce même contrat : après choix/confirmation du contexte et du domaine, la visibilité est confirmée lorsque nécessaire avant l'enregistrement. Aucun mécanisme de partage mobile ni aucune règle RLS correspondante n'est implémenté à ce stade.
