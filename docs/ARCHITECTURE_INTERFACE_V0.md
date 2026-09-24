@@ -296,3 +296,19 @@ Sur téléphone et ordinateur, vérifier :
 - le produit semble-t-il professionnel plutôt que générique ?
 
 Une maquette visuellement jolie mais qui échoue à ces scénarios n'est pas validée.
+
+
+## 15. Travail, attentions et calendrier
+
+La navigation et les écrans doivent préserver quatre objets conceptuellement différents :
+
+- un **événement/date** appartient au projet et représente quelque chose de planifié ;
+- une **tâche** représente un travail à accomplir ;
+- une **attention** est une remontée contextuelle dans Aujourd'hui et peut exister sans tâche ;
+- une **échéance** appartient à une tâche et indique avant quand agir ; elle est indépendante de la date d'un spectacle.
+
+La vue « Toutes les tâches » peut organiser simplement le travail par état ou horizon, tout en montrant le projet, la date liée lorsqu'elle existe, le responsable et l'échéance.
+
+Le **calendrier** est une projection chronologique. Il peut réunir dates de spectacle, répétitions, rendez-vous, échéances de tâches et autres événements professionnels pertinents, avec une distinction visuelle explicite entre leur nature. Sur téléphone, la forme privilégiée est une chronologie lisible plutôt qu'une grille mensuelle comprimée.
+
+Le calendrier ne devient pas une nouvelle source de vérité : les événements restent des événements et les échéances restent rattachées aux tâches.
