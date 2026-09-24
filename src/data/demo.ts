@@ -83,11 +83,11 @@ export const demoToday = {
   },
   work: {
     tasks: [
-      { id: "task-hotel", title: "Réserver l’hôtel", project: "XXX", eventLabel: "Brest · 28 septembre", assignee: "Marion", deadline: "25 septembre", deadlineSort: "2026-09-25", status: "À faire", group: "todo", priority: "À faire aujourd’hui" },
-      { id: "task-contract", title: "Envoyer le contrat", project: "Phantasia", eventLabel: "Nantes · 30 septembre", assignee: "Camille", deadline: "27 septembre", deadlineSort: "2026-09-27", status: "À faire", group: "soon", priority: "Bientôt" },
-      { id: "task-roadbook", title: "Transmettre la feuille de route", project: "Équinoxe", eventLabel: "Rennes · 2 octobre", assignee: "Marion", deadline: "30 septembre", deadlineSort: "2026-09-30", status: "À faire", group: "soon", priority: "Bientôt" },
-      { id: "task-tech", title: "Confirmer l’horaire technique", project: "Les Lucioles", eventLabel: null, assignee: "Paul", deadline: "3 octobre", deadlineSort: "2026-10-03", status: "À faire", group: "soon", priority: "Sans urgence immédiate" },
-      { id: "task-rooming", title: "Envoyer la liste des chambres", project: "Dame Jument", eventLabel: "Lorient · 6 octobre", assignee: "Léa", deadline: "22 septembre", deadlineSort: "2026-09-22", status: "Terminé", group: "done", priority: "Terminé" },
+      { id: "task-hotel", title: "Réserver l’hôtel", projectSlug: "xxx", dateSlug: "brest-2026-09-28", project: "XXX", eventLabel: "Brest · 28 septembre", assignee: "Léa", deadline: "25 septembre", deadlineSort: "2026-09-25", status: "À faire", group: "todo", priority: "À faire aujourd’hui" },
+      { id: "task-contract", title: "Envoyer le contrat", projectSlug: "phantasia", dateSlug: "nantes-2026-09-30", project: "Phantasia", eventLabel: "Nantes · 30 septembre", assignee: "Camille", deadline: "27 septembre", deadlineSort: "2026-09-27", status: "À faire", group: "soon", priority: "Bientôt" },
+      { id: "task-roadbook", title: "Transmettre la feuille de route", projectSlug: "equinoxe", dateSlug: "rennes-2026-10-02", project: "Équinoxe", eventLabel: "Rennes · 2 octobre", assignee: "Marion", deadline: "30 septembre", deadlineSort: "2026-09-30", status: "À faire", group: "soon", priority: "Bientôt" },
+      { id: "task-tech", title: "Confirmer l’horaire technique", projectSlug: "les-lucioles", dateSlug: null, project: "Les Lucioles", eventLabel: null, assignee: "Paul", deadline: "3 octobre", deadlineSort: "2026-10-03", status: "À faire", group: "soon", priority: "Sans urgence immédiate" },
+      { id: "task-rooming", title: "Envoyer la liste des chambres", projectSlug: "les-lucioles", dateSlug: "angers-2026-10-04", project: "Les Lucioles", eventLabel: "Angers · 4 octobre", assignee: "Léa", deadline: "22 septembre", deadlineSort: "2026-09-22", status: "Terminé", group: "done", priority: "Terminé" },
     ],
     events: [
       { id: "event-brest", date: demoProjects[0].dates[0].shortDate, sort: "2026-09-28T20:00", time: "20 h", title: demoProjects[0].name, detail: `${demoProjects[0].dates[0].city} · ${demoProjects[0].dates[0].venue}`, kind: "Représentation" },
