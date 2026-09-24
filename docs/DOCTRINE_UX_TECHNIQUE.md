@@ -837,3 +837,33 @@ Une structure active/désactive certains modules, définit ses rôles et ses mod
 La structure ajoute ses besoins spécifiques à partir de briques contrôlées.
 
 Ne pas aller vers un “no-code builder” illimité tant que le besoin n'est pas démontré. Trop de liberté peut détruire la cohérence, la recherche et la simplicité qui constituent précisément la valeur de Boralog.
+
+
+## 22. Doctrine temporelle et organisation du travail
+
+### 22.1 Ne pas transformer Boralog en gestionnaire de tâches générique
+
+Une tâche n'est créée que lorsqu'un travail doit réellement être accompli. Une information, un changement ou une réponse attendue ne devient pas automatiquement une tâche.
+
+**Aujourd'hui** est une vue d'attention : elle fait remonter ce qui mérite l'intervention ou la vigilance de la personne à partir des objets métier et de leur contexte.
+
+### 22.2 Quatre notions à ne pas confondre
+
+- **Événement / date** : fait planifié dans le temps, lié au projet.
+- **Tâche** : action à accomplir, éventuellement liée à un événement.
+- **Attention** : signal contextuel destiné à une personne ; il peut être dérivé d'une tâche ou d'une autre situation métier.
+- **Échéance** : limite temporelle d'une tâche. La date de l'événement et l'échéance peuvent être différentes.
+
+Exemple : une représentation a lieu le 18 octobre ; « réserver l'hôtel » peut avoir une échéance au 5 octobre.
+
+### 22.3 Calendrier
+
+Le calendrier est une **vue**, pas un stockage métier. Il projette chronologiquement les objets qui possèdent une dimension temporelle et conserve leur nature visible.
+
+Il pourra réunir :
+- représentations et autres dates de spectacle ;
+- répétitions et rendez-vous ;
+- échéances de tâches ;
+- autres événements professionnels pertinents.
+
+Sur téléphone, préférer une chronologie verticale claire. Une grille mensuelle ne doit être introduite que si elle apporte une valeur démontrée et reste lisible. Aucun objet ne doit être dupliqué pour apparaître dans le calendrier.
