@@ -611,3 +611,14 @@ Lorsque la confidentialité est pertinente, l'utilisateur doit comprendre **avan
 Les informations sensibles suivent un principe **deny-by-default** : aucun accès ne doit être déduit de la seule appartenance à la même structure. La confidentialité doit être garantie côté serveur et base de données par les permissions appropriées ; masquer une donnée dans l'interface n'est jamais une protection suffisante.
 
 Le futur formulaire de création d'information prévoit au minimum **contenu, contexte, domaine, visibilité**. Responsable et échéance ne s'ajoutent que si le contenu devient réellement une tâche. Le futur flux de partage externe doit lui aussi faire confirmer la visibilité lorsque nécessaire avant l'enregistrement.
+
+
+## 25. Place de référence et vues contextuelles
+
+Chaque objet métier possède une **place de référence** et n'existe qu'une fois. Une tâche, une information, une date, un document ou une conversation peut être relié à une structure, un projet/spectacle et, lorsque pertinent, une date. Ces relations déterminent les endroits où l'objet peut être présenté ; elles ne créent pas de copies.
+
+La hiérarchie **structure → projet → date → objets pertinents** décrit le contexte métier, pas un parcours de navigation obligatoire. L'utilisateur peut atteindre les mêmes objets depuis les vues transversales : Aujourd'hui, Recherche, Toutes les tâches, Calendrier ou Messages.
+
+Principe : **chaque chose a une place de référence ; chaque écran montre ce qui est utile dans son contexte ; la Recherche permet de retrouver le reste ; Aujourd'hui fait remonter ce qui mérite l'attention.**
+
+Ainsi, une tâche « Réserver l'hôtel » rattachée à un projet, une date, un responsable et une échéance reste un objet unique même si elle est représentée dans Aujourd'hui, Toutes les tâches, le projet, la date et le Calendrier. Les pages Projet et Date privilégient un résumé compact et un approfondissement volontaire plutôt que la répétition de gros modules.
