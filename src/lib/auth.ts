@@ -2,19 +2,19 @@ import { createClient } from "./supabase/server";
 
 export async function getCurrentIdentity() {
   const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims?.sub;
+  const { data, error } = await supabase.auth.getUser();
+  const user = error ? null : data.user;
 
-  if (!userId) return { userId: null, email: null, profile: null, hasOrganization: false };
+  if (!user) return { userId: null, email: null, profile: null, hasOrganization: false };
 
   const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase.from("profiles").select("id, display_name, professional_email").eq("id", userId).maybeSingle(),
-    supabase.from("organization_memberships").select("id").eq("user_id", userId).eq("status", "active").limit(1),
+    supabase.from("profiles").select("id, display_name, professional_email").eq("id", user.id).maybeSingle(),
+    supabase.from("organization_memberships").select("id").eq("user_id", user.id).eq("status", "active").limit(1),
   ]);
 
   return {
-    userId,
-    email: typeof claimsData.claims.email === "string" ? claimsData.claims.email : null,
+    userId: user.id,
+    email: user.email ?? null,
     profile,
     hasOrganization: Boolean(memberships?.length),
   };
