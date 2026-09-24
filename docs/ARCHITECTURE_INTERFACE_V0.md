@@ -354,3 +354,14 @@ L'appartenance à une structure ou à un projet n'accorde jamais implicitement l
 L'interface explique l'audience avant enregistrement, mais l'autorisation effective doit être appliquée côté serveur et base de données. La future architecture Supabase/RLS devra empêcher qu'un utilisateur non autorisé puisse récupérer ou modifier l'information, indépendamment de ce que l'interface affiche.
 
 Le futur point d'entrée par partage externe utilise ce même contrat : après choix/confirmation du contexte et du domaine, la visibilité est confirmée lorsque nécessaire avant l'enregistrement. Aucun mécanisme de partage mobile ni aucune règle RLS correspondante n'est implémenté à ce stade.
+
+
+## 18. Relations contextuelles et projections
+
+Le modèle d'interface distingue **stockage de référence** et **projection UX**. Une tâche ou une information est un objet unique relié par identifiants à son projet et, si nécessaire, à sa date. Les écrans consomment ces relations au lieu de maintenir des collections métier parallèles.
+
+Les pages Projet et Date exposent uniquement un résumé compact des tâches pertinentes et un accès à une vue contextualisée. La vue transversale Toutes les tâches reste la représentation complète du travail ; Aujourd'hui reste la vue d'attention ; Calendrier reste la projection temporelle ; Recherche et Messages restent des accès transversaux.
+
+Convention du prototype : la vue existante /aujourdhui/a-faire accepte un contexte par paramètres projet, puis éventuellement date. Elle affiche explicitement ce contexte et son lien de retour. Cette convention est une représentation UX ; elle ne crée ni nouvelle tâche ni nouveau stockage.
+
+Règle structurante : **une place de référence, plusieurs représentations ; jamais une copie métier par écran.**
