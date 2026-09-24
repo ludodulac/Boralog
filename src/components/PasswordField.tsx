@@ -3,15 +3,25 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
-export function PasswordField({ autoComplete, disabled }: { autoComplete: "current-password" | "new-password"; disabled: boolean }) {
+export function PasswordField({
+  autoComplete,
+  disabled,
+  label = "Mot de passe",
+  name = "password",
+}: {
+  autoComplete: "current-password" | "new-password";
+  disabled: boolean;
+  label?: string;
+  name?: string;
+}) {
   const [visible, setVisible] = useState(false);
-  const label = visible ? "Masquer le mot de passe" : "Afficher le mot de passe";
+  const visibilityLabel = visible ? `Masquer ${label.toLowerCase()}` : `Afficher ${label.toLowerCase()}`;
 
   return <label>
-    Mot de passe
+    {label}
     <span className="password-field">
       <input
-        name="password"
+        name={name}
         type={visible ? "text" : "password"}
         autoComplete={autoComplete}
         minLength={8}
@@ -21,8 +31,8 @@ export function PasswordField({ autoComplete, disabled }: { autoComplete: "curre
       <button
         className="password-visibility"
         type="button"
-        aria-label={label}
-        title={label}
+        aria-label={visibilityLabel}
+        title={visibilityLabel}
         onClick={() => setVisible((current) => !current)}
         disabled={disabled}
       >
