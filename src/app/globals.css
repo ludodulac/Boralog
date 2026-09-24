@@ -27,3 +27,5 @@
 @media(max-width:520px){.auth-card{padding:24px 18px}.auth-name-grid{grid-template-columns:1fr}.empty-membership-page{padding:80px 16px 100px}.empty-membership-card{padding:22px 18px}}
 
 .password-field{position:relative;display:block}.password-field input{padding-right:54px}.password-visibility{position:absolute;top:50%;right:2px;transform:translateY(-50%);width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer}.password-visibility:hover{background:var(--soft);color:var(--accent)}.password-visibility:focus-visible{outline:3px solid #7aa394;outline-offset:2px}.password-visibility:disabled{cursor:wait;opacity:.6}
+
+.auth-forgot{justify-self:end;margin-top:-8px;color:var(--accent);font-size:13px;font-weight:650;text-decoration:none;min-height:36px;display:inline-flex;align-items:center}.auth-forgot:focus-visible,.auth-submit-link:focus-visible{outline:3px solid #7aa394;outline-offset:2px;border-radius:7px}.auth-submit-link{display:flex;align-items:center;justify-content:center;text-decoration:none}.auth-form input:disabled{background:#f4f6f5;color:var(--muted)}
