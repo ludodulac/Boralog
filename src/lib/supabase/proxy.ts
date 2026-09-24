@@ -19,6 +19,8 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const { data } = await supabase.auth.getClaims();
-  return { response, authenticated: Boolean(data?.claims?.sub) };
+  // Security boundary: getUser() asks Supabase Auth to validate the current
+  // session instead of trusting only a locally valid JWT.
+  const { data, error } = await supabase.auth.getUser();
+  return { response, authenticated: !error && Boolean(data.user) };
 }
