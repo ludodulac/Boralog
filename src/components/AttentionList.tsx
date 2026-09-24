@@ -7,8 +7,10 @@ const icons = {
   train: TrainFront,
 };
 
+type AttentionItem = (typeof demoToday.attention.items)[number];
+
 type AttentionListProps = {
-  items?: typeof demoToday.attention.items;
+  items?: readonly AttentionItem[];
 };
 
 export function AttentionList({ items = demoToday.attention.items }: AttentionListProps) {
