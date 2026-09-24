@@ -867,3 +867,18 @@ Il pourra réunir :
 - autres événements professionnels pertinents.
 
 Sur téléphone, préférer une chronologie verticale claire. Une grille mensuelle ne doit être introduite que si elle apporte une valeur démontrée et reste lisible. Aucun objet ne doit être dupliqué pour apparaître dans le calendrier.
+
+
+## 23. Entrée, contexte et fraîcheur de l'information
+
+Toute information opérationnelle doit conserver son contexte visible : structure si nécessaire, projet/spectacle, date éventuelle, domaine et personnes concernées. Une vue dérivée ne doit pas recréer une seconde vérité simplement pour son propre affichage.
+
+Lorsqu'une information est nouvelle ou modifiée, l'interface peut indiquer sobrement sa fraîcheur et sa dernière mise à jour. Aujourd'hui peut reprendre cette information lorsqu'elle est pertinente pour la personne. Cette reprise n'implique ni tâche automatique ni notification réelle.
+
+### Préparation au partage externe
+
+Le modèle doit accepter à terme un contenu reçu depuis le mécanisme de partage du téléphone (texte, lien ou fichier) avant son classement. Le parcours UX cible est : réception → choix ou suggestion de contexte → confirmation humaine → enregistrement.
+
+Une suggestion de classement n'est jamais une donnée certaine par elle-même. Toute automatisation future doit conserver la provenance, distinguer suggestion et confirmation, exprimer un niveau de confiance lorsque pertinent et demander une validation humaine lorsque le contexte n'est pas suffisamment certain.
+
+Le prototype actuel ne met en œuvre ni Web Share Target, ni application Android, ni Share Extension iOS, ni intégration WhatsApp/SMS.
