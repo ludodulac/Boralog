@@ -10,7 +10,7 @@ export function AttentionSection() {
     className="attention"
     title="À faire maintenant"
     hint={demoToday.attention.countLabel}
-    href="/aujourdhui/a-faire"
+    href="/aujourdhui/attentions"
     hasMore={items.length > previewCount}
   >
     <AttentionList items={items.slice(0, previewCount)} />
