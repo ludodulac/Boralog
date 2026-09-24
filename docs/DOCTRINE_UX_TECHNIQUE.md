@@ -912,3 +912,14 @@ La liste exacte des modes de visibilité reste à concevoir. L'UX doit néanmoin
 Pour une information sensible, appliquer **deny-by-default** : l'absence d'autorisation explicite signifie absence d'accès. Le serveur et la base doivent filtrer et refuser les lectures et mutations non autorisées ; masquer un composant côté client n'est pas une mesure de confidentialité.
 
 Le futur parcours de partage depuis une application extérieure réutilise le même contrat : contenu reçu → contexte → domaine → visibilité lorsque nécessaire → confirmation → enregistrement. La visibilité doit être confirmée avant qu'un contenu confidentiel devienne une information Boralog.
+
+
+## 25. Référence unique, représentations multiples
+
+Les vues Boralog ne doivent pas posséder leurs propres copies des objets métier. Une donnée de référence est identifiée une fois ; les relations de contexte déterminent ses représentations.
+
+La hiérarchie métier **structure → projet → date → informations/tâches/documents/conversations pertinents** n'impose pas de navigation séquentielle. Aujourd'hui, Recherche, Toutes les tâches, Calendrier et Messages sont des projections transversales permettant un accès direct.
+
+Sur une page Projet ou Date, appliquer la divulgation progressive : montrer un résumé utile (par exemple nombre de tâches en cours et bientôt), puis un lien vers une vue filtrée explicitement contextualisée. Ne pas embarquer le gestionnaire complet de tâches dans chaque page.
+
+Une vue filtrée annonce son contexte dans son titre et fournit un retour clair vers le projet ou la date d'origine. Le filtrage s'appuie sur les identifiants/relations des objets, jamais sur une seconde collection recopiée pour l'écran.
