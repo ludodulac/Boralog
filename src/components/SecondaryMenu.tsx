@@ -41,6 +41,7 @@ export function SecondaryMenu() {
         </button>
       </div>
       <Link className="menu-help-link" href="/aide" onClick={() => setOpen(false)}>Comment fonctionne Boralog ?</Link>
+      <Link className="menu-help-link menu-calendar-link" href="/calendrier" onClick={() => setOpen(false)}>Calendrier</Link>
       <div className="menu-unavailable" aria-disabled="true"><span>Paramètres</span><small>Bientôt disponible</small></div>
       <div className="menu-unavailable" aria-disabled="true"><span>Se déconnecter</span><small>Bientôt disponible</small></div>
     </div>}
