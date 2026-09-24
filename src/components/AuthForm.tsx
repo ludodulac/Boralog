@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
+import { PasswordField } from "./PasswordField";
 
 type Mode = "connexion" | "inscription";
 
@@ -85,7 +86,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
       <label>Nom<input name="lastName" autoComplete="family-name" required disabled={pending}/></label>
     </div>}
     <label>Email<input name="email" type="email" autoComplete="email" required disabled={pending}/></label>
-    <label>Mot de passe<input name="password" type="password" autoComplete={signup ? "new-password" : "current-password"} minLength={8} required disabled={pending}/></label>
+    <PasswordField autoComplete={signup ? "new-password" : "current-password"} disabled={pending}/>
     {feedback && <p className={feedback.type === "error" ? "auth-feedback error" : "auth-feedback"} role={feedback.type === "error" ? "alert" : "status"}>{feedback.text}</p>}
     <button className="auth-submit" type="submit" disabled={pending}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
     <p className="auth-switch">{signup ? <>Déjà un compte ? <Link href="/auth/connexion">Se connecter</Link></> : <>Nouveau sur Boralog ? <Link href="/auth/inscription">Créer un compte</Link></>}</p>
