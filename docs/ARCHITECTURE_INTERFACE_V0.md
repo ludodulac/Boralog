@@ -312,3 +312,18 @@ La vue « Toutes les tâches » peut organiser simplement le travail par état o
 Le **calendrier** est une projection chronologique. Il peut réunir dates de spectacle, répétitions, rendez-vous, échéances de tâches et autres événements professionnels pertinents, avec une distinction visuelle explicite entre leur nature. Sur téléphone, la forme privilégiée est une chronologie lisible plutôt qu'une grille mensuelle comprimée.
 
 Le calendrier ne devient pas une nouvelle source de vérité : les événements restent des événements et les échéances restent rattachées aux tâches.
+
+
+## 16. Colonne vertébrale de l'information
+
+Le chemin métier navigable de référence est :
+
+**Projets → spectacle/projet → date → informations par domaine.**
+
+Une information possède un contexte explicite pouvant comprendre : structure, projet, date, domaine et personnes concernées. Les domaines servent à retrouver naturellement l'information (par exemple Horaires, Équipe, Transport, Hébergement, Technique, Administration/Contrat) ; ils ne doivent pas devenir une forêt de modules artificiels.
+
+La même information de référence peut être représentée sur sa page date, dans une synthèse projet, dans la recherche ou dans Aujourd'hui. Ces représentations ne créent pas de copies métier divergentes.
+
+Les informations récentes pertinentes peuvent apparaître dans Aujourd'hui avec leur contexte et leur fraîcheur, sans créer automatiquement une tâche.
+
+Un futur point d'entrée de partage depuis le téléphone devra pouvoir recevoir un contenu externe puis demander à l'utilisateur de confirmer projet, date et domaine avant enregistrement. Aucun partage Android/iOS n'est implémenté dans le prototype actuel.
