@@ -58,17 +58,29 @@ export const demoProjects = [
   },
 ] as const;
 
+export const demoRecentActivity = demoProjects.flatMap((project) =>
+  project.dates.flatMap((date) =>
+    date.informations
+      .filter((information) => information.freshness === "Nouveau" || information.freshness === "Modifié")
+      .map((information) => ({
+        information,
+        project,
+        date,
+        href: `/projets/${project.slug}/dates/${date.slug}`,
+      }))
+  )
+);
+
 export const demoToday = {
   dateLabel: "JEUDI 24 SEPTEMBRE",
   firstName: "Marion",
-  subtitle: "Voici uniquement ce qui demande ton attention.",
+  subtitle: "L’essentiel pour reprendre le fil rapidement.",
   organization: { name: "Bora Bora Productions", role: "Production" },
   attention: {
-    countLabel: "5 éléments",
+    countLabel: "4 éléments",
     items: [
       { kind: "alert", tag: "INFORMATION MANQUANTE", title: "Train retour de Pierre", project: "XXX · Brest", detail: "28 septembre", meta: "Aujourd’hui", urgent: true },
       { kind: "message", tag: "MESSAGE", title: "Jeanne attend une réponse", project: "Phantasia · Nantes", detail: "Logistique", meta: "Il y a 32 min", urgent: false },
-      { kind: "train", tag: "CHANGEMENT", title: demoProjects[0].dates[0].informations[0].title, project: `${demoProjects[0].name} · ${demoProjects[0].dates[0].city}`, detail: `${demoProjects[0].dates[0].informations[0].domain} · ${demoProjects[0].dates[0].shortDate}`, meta: demoProjects[0].dates[0].informations[0].updatedAt, urgent: false },
       { kind: "alert", tag: "DOCUMENT", title: "Feuille de route à vérifier", project: "Équinoxe · Rennes", detail: "Document de tournée", meta: "Demain", urgent: false },
       { kind: "message", tag: "RÉPONSE ATTENDUE", title: "Camille confirme l’hébergement", project: "Les Lucioles · Angers", detail: "Hébergement", meta: "Cette semaine", urgent: false },
     ],
