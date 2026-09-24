@@ -3,10 +3,10 @@ import { CalendarDays, FolderKanban, MessageCircle, Search, UserRound } from "lu
 
 const nav = [
   [CalendarDays, "Aujourd’hui", "/"],
-  [MessageCircle, "Messages", null],
+  [MessageCircle, "Messages", "/messages"],
   [FolderKanban, "Projets", "/projets"],
-  [Search, "Recherche", null],
-  [UserRound, "Moi", null],
+  [Search, "Recherche", "/recherche"],
+  [UserRound, "Moi", "/moi"],
 ] as const;
 
 type MainNavigationProps = {
@@ -18,6 +18,9 @@ type MainNavigationProps = {
 function isActive(label: string, pathname: string) {
   if (label === "Projets") return pathname === "/projets" || pathname.startsWith("/projets/");
   if (label === "Aujourd’hui") return pathname === "/" || pathname.startsWith("/aujourdhui/");
+  if (label === "Messages") return pathname === "/messages" || pathname.startsWith("/messages/");
+  if (label === "Recherche") return pathname === "/recherche" || pathname.startsWith("/recherche/");
+  if (label === "Moi") return pathname === "/moi" || pathname.startsWith("/moi/");
   return false;
 }
 
