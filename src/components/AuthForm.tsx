@@ -14,10 +14,10 @@ function messageFor(error: string) {
   return "L’action n’a pas pu aboutir. Réessayez.";
 }
 
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedback?: string }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(initialFeedback ? { type: "success", text: initialFeedback } : null);
 
   async function submit(formData: FormData) {
     setPending(true);
