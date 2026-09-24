@@ -950,3 +950,21 @@ Aujourd'hui n'est ni un journal exhaustif, ni un centre de notifications génér
 La section « Depuis votre dernière visite » est DEMO tant que l'authentification et un curseur de dernière consultation n'existent pas. Le système réel devra la calculer à partir de l'identité authentifiée, des permissions, du dernier point de consultation et des informations créées ou modifiées depuis ce point.
 
 Un agrégateur Aujourd'hui ne peut jamais élargir les droits de lecture : il ne présente que des objets que l'utilisateur connecté est autorisé à lire selon les permissions de leur source. L'agrégation est une représentation, jamais un contournement des règles de confidentialité.
+
+
+## 28. Identité authentifiée et accès métier
+
+La fondation d'identité suit quatre niveaux distincts :
+
+- **Compte → identité** : une personne authentifiée par Supabase Auth, reliée à son profil public.profiles.
+- **Membership organisation → accès structure** : l'existence d'un compte ne donne aucun accès à une structure.
+- **Membership projet → accès projet** : les accès projet découlent des relations métier et des règles RLS, pas d'un identifiant fourni arbitrairement par le client.
+- **Rôle / permissions → actions autorisées** : l'authentification seule ne constitue jamais une autorisation métier.
+
+Aucune autorisation ne doit dépendre de user_metadata. Ces métadonnées peuvent servir à initialiser une donnée d'identité lors de l'inscription, mais la donnée de profil persistée et les memberships sont les références applicatives. Une policy TO authenticated n'est pas suffisante sans prédicat d'autorisation approprié.
+
+### Phase transitoire
+
+Boralog fonctionne temporairement avec **AUTH RÉELLE + CONTENU MÉTIER ENCORE DEMO**. demo.ts reste un outil de construction des écrans et ne représente pas les droits ou appartenances de la personne connectée. Une personne authentifiée sans membership voit un état « aucune structure » et ne doit pas être présentée comme Marion, ni comme membre de Bora Bora Productions ou d'un projet fictif.
+
+Les routes internes sont protégées côté serveur. La session SSR est portée par cookies et vérifiée avant l'accès ; aucune clé service_role ne doit être exposée au frontend ou dans une variable publique.
