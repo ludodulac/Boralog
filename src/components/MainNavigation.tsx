@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CalendarDays, FolderKanban, MessageCircle, Search, UserRound } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const nav = [
   [CalendarDays, "Aujourd’hui", "/"],
@@ -7,7 +8,7 @@ const nav = [
   [FolderKanban, "Projets", "/projets"],
   [Search, "Recherche", "/recherche"],
   [UserRound, "Moi", "/moi"],
-] as const;
+] satisfies readonly (readonly [LucideIcon, string, string])[];
 
 type MainNavigationProps = {
   organizationName: string;
