@@ -565,3 +565,17 @@ Pour toute nouvelle fonction, poser quatre questions :
 4. Peut-on éviter une saisie supplémentaire ?
 
 Si la fonction ne réduit ni la dispersion de l'information, ni la ressaisie, ni la charge de coordination, elle n'est probablement pas prioritaire.
+
+
+## 22. Organisation du travail : objets distincts
+
+Boralog ne doit pas devenir une gigantesque liste de tâches. Quatre notions restent distinctes :
+
+- **Événement / date** : représentation, répétition, rendez-vous professionnel ou autre événement planifié. Il possède une date/heure et appartient au contexte réel du projet.
+- **Tâche** : travail qui doit réellement être accompli. Elle peut être liée à un projet et éventuellement à un événement, avoir un responsable, une échéance, un état et une priorité raisonnable.
+- **Attention** : signal présenté à une personne parce qu'une situation mérite son attention. Une attention peut venir d'une tâche, mais aussi d'une information manquante, d'un changement, d'une réponse attendue ou d'un problème sur une date. Elle n'est donc pas nécessairement une tâche créée manuellement.
+- **Échéance** : date avant laquelle une action doit être accomplie. Elle ne doit jamais être confondue avec la date de l'événement concerné.
+
+Principe : **les données vivent dans leur contexte → Boralog détermine ce qui demande de l'attention → Aujourd'hui le fait remonter.** L'utilisateur ne doit pas transformer chaque information en tâche pour que Boralog reste utile.
+
+Une future vue calendrier réunira événements, répétitions/rendez-vous et échéances utiles sans les fusionner. Le calendrier est une représentation temporelle de ces objets, jamais leur stockage métier principal.
