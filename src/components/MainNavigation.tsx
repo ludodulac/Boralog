@@ -12,22 +12,33 @@ const nav = [
 type MainNavigationProps = {
   organizationName: string;
   organizationRole: string;
+  pathname: string;
 };
 
-function NavItems({ mobile = false }: { mobile?: boolean }) {
-  return <>{nav.map(([Icon, label, href], i) => href
-    ? <Link className={i === 0 ? "active" : ""} href={href} key={label}><Icon size={mobile ? 21 : 20} aria-hidden="true"/><span>{label}</span></Link>
-    : <button className={i === 0 ? "active" : ""} type="button" key={label}><Icon size={mobile ? 21 : 20} aria-hidden="true"/><span>{label}</span></button>
-  )}</>;
+function isActive(label: string, pathname: string) {
+  if (label === "Projets") return pathname === "/projets" || pathname.startsWith("/projets/");
+  if (label === "Aujourd’hui") return pathname === "/" || pathname.startsWith("/aujourdhui/");
+  return false;
 }
 
-export function MainNavigation({ organizationName, organizationRole }: MainNavigationProps) {
+function NavItems({ pathname, mobile = false }: { pathname: string; mobile?: boolean }) {
+  return <>{nav.map(([Icon, label, href]) => {
+    const active = isActive(label, pathname);
+    const className = active ? "active" : undefined;
+    const current = active ? "page" as const : undefined;
+    return href
+      ? <Link className={className} href={href} aria-current={current} key={label}><Icon size={mobile ? 21 : 20} aria-hidden="true"/><span>{label}</span></Link>
+      : <button className={className} type="button" key={label} aria-current={current}><Icon size={mobile ? 21 : 20} aria-hidden="true"/><span>{label}</span></button>;
+  })}</>;
+}
+
+export function MainNavigation({ organizationName, organizationRole, pathname }: MainNavigationProps) {
   return <>
     <aside className="side-nav">
       <div className="brand"><span>B</span><strong>Boralog</strong></div>
-      <nav><NavItems /></nav>
+      <nav aria-label="Navigation principale"><NavItems pathname={pathname}/></nav>
       <div className="org"><small>Organisation</small><strong>{organizationName}</strong><span>{organizationRole}</span></div>
     </aside>
-    <nav className="bottom-nav" aria-label="Navigation principale"><NavItems mobile /></nav>
+    <nav className="bottom-nav" aria-label="Navigation principale"><NavItems pathname={pathname} mobile /></nav>
   </>;
 }
