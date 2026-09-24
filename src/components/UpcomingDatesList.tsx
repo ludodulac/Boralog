@@ -1,7 +1,9 @@
 import { demoToday } from "../data/demo";
 
+type UpcomingDate = (typeof demoToday.upcoming.dates)[number];
+
 type UpcomingDatesListProps = {
-  dates?: typeof demoToday.upcoming.dates;
+  dates?: readonly UpcomingDate[];
 };
 
 export function UpcomingDatesList({ dates = demoToday.upcoming.dates }: UpcomingDatesListProps) {
