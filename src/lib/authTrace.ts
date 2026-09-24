@@ -10,7 +10,7 @@ type CookieLike = {
   path?: string;
   domain?: string;
   maxAge?: number;
-  expires?: Date | string;
+  expires?: Date | string | number;
   sameSite?: boolean | string;
   secure?: boolean;
 };
