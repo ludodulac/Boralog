@@ -7,7 +7,7 @@ export const demoToday = {
     role: "Production",
   },
   attention: {
-    countLabel: "3 éléments",
+    countLabel: "5 éléments",
     items: [
       {
         kind: "alert",
@@ -36,10 +36,28 @@ export const demoToday = {
         meta: "À vérifier",
         urgent: false,
       },
+      {
+        kind: "alert",
+        tag: "DOCUMENT",
+        title: "Feuille de route à vérifier",
+        project: "Équinoxe · Rennes",
+        detail: "Document de tournée",
+        meta: "Demain",
+        urgent: false,
+      },
+      {
+        kind: "message",
+        tag: "RÉPONSE ATTENDUE",
+        title: "Camille confirme l’hébergement",
+        project: "Les Lucioles · Angers",
+        detail: "Hébergement",
+        meta: "Cette semaine",
+        urgent: false,
+      },
     ],
   },
   upcoming: {
-    rangeLabel: "Les 7 prochains jours",
+    rangeLabel: "Les 7 prochains jours · 4 dates",
     dates: [
       {
         day: "28",
@@ -54,6 +72,22 @@ export const demoToday = {
         month: "SEP",
         title: "Phantasia",
         detail: "Nantes · TU-Nantes",
+        status: "Complet",
+        warning: false,
+      },
+      {
+        day: "02",
+        month: "OCT",
+        title: "Équinoxe",
+        detail: "Rennes · Le Passage",
+        status: "À vérifier",
+        warning: true,
+      },
+      {
+        day: "04",
+        month: "OCT",
+        title: "Les Lucioles",
+        detail: "Angers · Théâtre du Parc",
         status: "Complet",
         warning: false,
       },
