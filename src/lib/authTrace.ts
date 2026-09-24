@@ -11,7 +11,7 @@ type CookieLike = {
   domain?: string;
   maxAge?: number;
   expires?: Date | string;
-  sameSite?: boolean | "lax" | "strict" | "none";
+  sameSite?: boolean | string;
   secure?: boolean;
 };
 
