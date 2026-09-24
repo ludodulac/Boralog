@@ -35,7 +35,6 @@ export function SecondaryMenu() {
     </button>
     {open && <div className="menu-panel" id={panelId} role="dialog" aria-label="Menu secondaire">
       <div className="menu-panel-head">
-        <strong>Menu</strong>
         <button type="button" className="menu-close" onClick={() => { setOpen(false); triggerRef.current?.focus(); }}>
           <X size={18} aria-hidden="true" /><span>Fermer</span>
         </button>
