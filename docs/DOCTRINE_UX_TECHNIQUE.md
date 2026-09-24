@@ -923,3 +923,15 @@ La hiérarchie métier **structure → projet → date → informations/tâches/
 Sur une page Projet ou Date, appliquer la divulgation progressive : montrer un résumé utile (par exemple nombre de tâches en cours et bientôt), puis un lien vers une vue filtrée explicitement contextualisée. Ne pas embarquer le gestionnaire complet de tâches dans chaque page.
 
 Une vue filtrée annonce son contexte dans son titre et fournit un retour clair vers le projet ou la date d'origine. Le filtrage s'appuie sur les identifiants/relations des objets, jamais sur une seconde collection recopiée pour l'écran.
+
+
+## 26. Navigation globale persistante et contexte local
+
+Une page interne ne doit pas devenir une impasse de navigation. La profondeur métier conserve deux niveaux complémentaires :
+
+- **navigation globale persistante** vers Aujourd'hui, Messages, Projets, Recherche et Moi ;
+- **navigation contextuelle** indiquant le projet, la date ou le parent métier courant et permettant d'y revenir.
+
+La navigation contextuelle ne remplace jamais la navigation globale. Aujourd'hui est l'accueil opérationnel ; aucun second bouton « Accueil » n'est nécessaire. Le menu hamburger reste secondaire et ne doit pas absorber les cinq destinations principales.
+
+Sur téléphone, les cinq destinations restent réparties en cinq zones tactiles distinctes, sans défilement horizontal, et respectent la safe area exposée par le navigateur. Sur ordinateur, la même navigation globale reste stable à gauche. L'état actif est annoncé sémantiquement et visuellement ; le contexte précis reste porté par le contenu de la page.
