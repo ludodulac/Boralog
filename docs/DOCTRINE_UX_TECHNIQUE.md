@@ -882,3 +882,33 @@ Le modèle doit accepter à terme un contenu reçu depuis le mécanisme de parta
 Une suggestion de classement n'est jamais une donnée certaine par elle-même. Toute automatisation future doit conserver la provenance, distinguer suggestion et confirmation, exprimer un niveau de confiance lorsque pertinent et demander une validation humaine lorsque le contexte n'est pas suffisamment certain.
 
 Le prototype actuel ne met en œuvre ni Web Share Target, ni application Android, ni Share Extension iOS, ni intégration WhatsApp/SMS.
+
+
+## 24. Feedback des mutations et confidentialité avant enregistrement
+
+### 24.1 États d'interaction
+
+Toute mutation ou opération qui demande réellement du temps doit exposer un état perceptible et fidèle :
+
+**prêt → pending → succès ou erreur.**
+
+Pendant le pending, le contrôle peut être désactivé lorsque cela évite raisonnablement un double envoi. Un chargement de contenu peut utiliser un skeleton ou un état loading adapté. Le succès reste sobre mais explicite. L'erreur explique ce qui s'est passé, permet de réessayer lorsque pertinent et conserve la saisie dès que cela est raisonnablement possible.
+
+Ne jamais simuler une attente pour donner l'impression que le système travaille. Une navigation instantanée n'a pas besoin de spinner. **Aucune action importante ne doit être silencieuse, mais aucun feedback ne doit être fictif.**
+
+### 24.2 Visibilité d'une information
+
+La visibilité est une propriété métier de l'information, pas un simple choix d'affichage. Le futur formulaire de création doit rendre compréhensibles avant validation :
+
+- **contenu** ;
+- **contexte** ;
+- **domaine** ;
+- **visibilité**.
+
+Une information transformée en véritable tâche peut en plus recevoir un responsable et une échéance. Ces champs ne doivent pas transformer une simple information en tâche par défaut.
+
+La liste exacte des modes de visibilité reste à concevoir. L'UX doit néanmoins pouvoir exprimer clairement des audiences comme une équipe ou un rôle, des personnes choisies, l'administration ou un accès restreint. Appartenir à la même structure ou au même projet ne confère pas implicitement l'accès à toute information.
+
+Pour une information sensible, appliquer **deny-by-default** : l'absence d'autorisation explicite signifie absence d'accès. Le serveur et la base doivent filtrer et refuser les lectures et mutations non autorisées ; masquer un composant côté client n'est pas une mesure de confidentialité.
+
+Le futur parcours de partage depuis une application extérieure réutilise le même contrat : contenu reçu → contexte → domaine → visibilité lorsque nécessaire → confirmation → enregistrement. La visibilité doit être confirmée avant qu'un contenu confidentiel devienne une information Boralog.
