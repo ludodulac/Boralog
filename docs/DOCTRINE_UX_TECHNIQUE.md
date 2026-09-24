@@ -935,3 +935,18 @@ Une page interne ne doit pas devenir une impasse de navigation. La profondeur m�
 La navigation contextuelle ne remplace jamais la navigation globale. Aujourd'hui est l'accueil opérationnel ; aucun second bouton « Accueil » n'est nécessaire. Le menu hamburger reste secondaire et ne doit pas absorber les cinq destinations principales.
 
 Sur téléphone, les cinq destinations restent réparties en cinq zones tactiles distinctes, sans défilement horizontal, et respectent la safe area exposée par le navigateur. Sur ordinateur, la même navigation globale reste stable à gauche. L'état actif est annoncé sémantiquement et visuellement ; le contexte précis reste porté par le contenu de la page.
+
+
+## 27. Aujourd'hui : reprise opérationnelle personnelle
+
+**Aujourd'hui** est le point d'entrée opérationnel personnel. Il rassemble, dans cet ordre de priorité :
+
+1. ce qui exige réellement une action ou une attention maintenant ;
+2. les changements pertinents depuis la dernière consultation ;
+3. les prochaines dates utiles.
+
+Aujourd'hui n'est ni un journal exhaustif, ni un centre de notifications générique, ni une copie des tâches, messages ou informations sources. **Information ≠ attention ≠ tâche.** Une information nouvelle ou modifiée reste l'information de référence de son projet et de sa date ; Aujourd'hui n'en affiche qu'une représentation contextualisée. Une tâche urgente peut y être représentée sans être recréée.
+
+La section « Depuis votre dernière visite » est DEMO tant que l'authentification et un curseur de dernière consultation n'existent pas. Le système réel devra la calculer à partir de l'identité authentifiée, des permissions, du dernier point de consultation et des informations créées ou modifiées depuis ce point.
+
+Un agrégateur Aujourd'hui ne peut jamais élargir les droits de lecture : il ne présente que des objets que l'utilisateur connecté est autorisé à lire selon les permissions de leur source. L'agrégation est une représentation, jamais un contournement des règles de confidentialité.
