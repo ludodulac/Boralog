@@ -87,6 +87,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     </div>}
     <label>Email<input name="email" type="email" autoComplete="email" required disabled={pending}/></label>
     <PasswordField autoComplete={signup ? "new-password" : "current-password"} disabled={pending}/>
+    {!signup && <Link className="auth-forgot" href="/auth/mot-de-passe-oublie">Mot de passe oublié ?</Link>}
     {feedback && <p className={feedback.type === "error" ? "auth-feedback error" : "auth-feedback"} role={feedback.type === "error" ? "alert" : "status"}>{feedback.text}</p>}
     <button className="auth-submit" type="submit" disabled={pending}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
     <p className="auth-switch">{signup ? <>Déjà un compte ? <Link href="/auth/connexion">Se connecter</Link></> : <>Nouveau sur Boralog ? <Link href="/auth/inscription">Créer un compte</Link></>}</p>
