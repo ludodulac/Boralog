@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { PasswordField } from "./PasswordField";
@@ -18,7 +18,6 @@ function messageFor(error: string) {
 export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedback?: string }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-  const explicitLoginIntent = useRef(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(initialFeedback ? { type: "success", text: initialFeedback } : null);
 
   async function submit(formData: FormData) {
@@ -72,30 +71,39 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
 
   const signup = mode === "inscription";
 
-  function markExplicitLoginClick(event: MouseEvent<HTMLButtonElement>) {
-    if (!signup && event.nativeEvent.isTrusted) explicitLoginIntent.current = true;
+  function loginFromButton(event: MouseEvent<HTMLButtonElement>) {
+    if (signup || pending || !event.nativeEvent.isTrusted) return;
+    void submit(new FormData(event.currentTarget.form!));
   }
 
-  function markExplicitLoginEnter(event: KeyboardEvent<HTMLFormElement>) {
-    if (!signup && event.key === "Enter" && event.nativeEvent.isTrusted) explicitLoginIntent.current = true;
-  }
+  function loginFromEnter(event: KeyboardEvent<HTMLFormElement>) {
+    if (signup || pending || event.key !== "Enter" || !event.nativeEvent.isTrusted) return;
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || (target.name !== "email" && target.name !== "password")) return;
 
-  function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
-    if (signup) return;
+    const form = event.currentTarget;
+    const email = form.elements.namedItem("email");
+    const password = form.elements.namedItem("password");
+    if (!(email instanceof HTMLInputElement) || !(password instanceof HTMLInputElement)) return;
+
+    // Only treat Enter as login intent when both credentials were already
+    // present before the key's default behavior. This prevents an Enter used
+    // to choose an autofill suggestion from simultaneously becoming login.
+    if (!email.value.trim() || !password.value) return;
+
     event.preventDefault();
+    void submit(new FormData(form));
+  }
 
-    const explicit = explicitLoginIntent.current;
-    explicitLoginIntent.current = false;
-    if (!explicit || pending) return;
-
-    void submit(new FormData(event.currentTarget));
+  function blockGenericLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    if (!signup) event.preventDefault();
   }
 
   return <form
     className="auth-form"
     action={signup ? submit : undefined}
-    onSubmit={signup ? undefined : handleLoginSubmit}
-    onKeyDown={signup ? undefined : markExplicitLoginEnter}
+    onSubmit={signup ? undefined : blockGenericLoginSubmit}
+    onKeyDown={signup ? undefined : loginFromEnter}
     aria-busy={pending}
   >
     {signup && <div className="auth-name-grid">
@@ -106,7 +114,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     <PasswordField autoComplete={signup ? "new-password" : "current-password"} disabled={pending}/>
     {!signup && <Link className="auth-forgot" href="/auth/mot-de-passe-oublie">Mot de passe oublié ?</Link>}
     {feedback && <p className={feedback.type === "error" ? "auth-feedback error" : "auth-feedback"} role={feedback.type === "error" ? "alert" : "status"}>{feedback.text}</p>}
-    <button className="auth-submit" type="submit" disabled={pending} onClick={signup ? undefined : markExplicitLoginClick}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
+    <button className="auth-submit" type={signup ? "submit" : "button"} disabled={pending} onClick={signup ? undefined : loginFromButton}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
     <p className="auth-switch">{signup ? <>Déjà un compte ? <Link href="/auth/connexion">Se connecter</Link></> : <>Nouveau sur Boralog ? <Link href="/auth/inscription">Créer un compte</Link></>}</p>
   </form>;
 }
