@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { PasswordField } from "./PasswordField";
 
 type Mode = "connexion" | "inscription";
+
+const TRACE_KEY = "boralog-auth-018-trace";
 
 function messageFor(error: string) {
   if (/invalid login credentials/i.test(error)) return "Email ou mot de passe incorrect.";
@@ -21,9 +23,27 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
   const traceSeq = useRef(0);
   const [runtimeTrace, setRuntimeTrace] = useState<string[]>([]);
 
-  function trace(event: string) {
+  useEffect(() => {
+    if (mode !== "connexion") return;
+    const stored = window.sessionStorage.getItem(TRACE_KEY);
+    if (!stored) return;
+    const entries = stored.split("\\n").filter(Boolean);
+    setRuntimeTrace(entries);
+    traceSeq.current = entries.length;
+  }, [mode]);
+
+  function trace(event: string, isTrusted?: boolean) {
     traceSeq.current += 1;
-    setRuntimeTrace((current) => [...current, `${traceSeq.current} ${event}`]);
+    const entry = `${traceSeq.current} ${event}${isTrusted === undefined ? "" : ` trusted=${isTrusted}`}`;
+    setRuntimeTrace((current) => [...current, entry]);
+    try {
+      const stored = window.sessionStorage.getItem(TRACE_KEY);
+      const entries = stored ? stored.split("\\n").filter(Boolean) : [];
+      entries.push(entry);
+      window.sessionStorage.setItem(TRACE_KEY, entries.join("\\n"));
+    } catch {
+      // Diagnostic persistence is best-effort and must never affect authentication.
+    }
   }
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(initialFeedback ? { type: "success", text: initialFeedback } : null);
 
@@ -81,7 +101,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
   const signup = mode === "inscription";
 
   function loginFromButton(event: MouseEvent<HTMLButtonElement>) {
-    trace("login_button_click");
+    trace("login_button_click", event.nativeEvent.isTrusted);
     if (signup || pending || !event.nativeEvent.isTrusted) return;
     const form = event.currentTarget.form;
     if (!form || !form.reportValidity()) return;
@@ -89,7 +109,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
   }
 
   function loginFromEnter(event: KeyboardEvent<HTMLFormElement>) {
-    trace(`form_keydown_${event.key === "Enter" ? "enter" : "other"}`);
+    trace(`form_keydown_${event.key === "Enter" ? "enter" : "other"}`, event.nativeEvent.isTrusted);
     if (signup || pending || event.key !== "Enter" || !event.nativeEvent.isTrusted) return;
     const target = event.target;
     if (!(target instanceof HTMLInputElement) || (target.name !== "email" && target.name !== "password")) return;
@@ -110,7 +130,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
   }
 
   function blockGenericLoginSubmit(event: FormEvent<HTMLFormElement>) {
-    trace("generic_submit_event");
+    trace("generic_submit_event", event.nativeEvent.isTrusted);
     if (!signup) event.preventDefault();
   }
 
