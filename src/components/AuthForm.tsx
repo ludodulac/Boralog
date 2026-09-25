@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { PasswordField } from "./PasswordField";
 
 type Mode = "connexion" | "inscription";
-
-const TRACE_KEY = "boralog-auth-018-trace";
 
 function messageFor(error: string) {
   if (/invalid login credentials/i.test(error)) return "Email ou mot de passe incorrect.";
@@ -20,35 +18,9 @@ function messageFor(error: string) {
 export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedback?: string }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-  const traceSeq = useRef(0);
-  const [runtimeTrace, setRuntimeTrace] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (mode !== "connexion") return;
-    const stored = window.sessionStorage.getItem(TRACE_KEY);
-    if (!stored) return;
-    const entries = stored.split("\\n").filter(Boolean);
-    setRuntimeTrace(entries);
-    traceSeq.current = entries.length;
-  }, [mode]);
-
-  function trace(event: string, isTrusted?: boolean) {
-    traceSeq.current += 1;
-    const entry = `${traceSeq.current} ${event}${isTrusted === undefined ? "" : ` trusted=${isTrusted}`}`;
-    setRuntimeTrace((current) => [...current, entry]);
-    try {
-      const stored = window.sessionStorage.getItem(TRACE_KEY);
-      const entries = stored ? stored.split("\\n").filter(Boolean) : [];
-      entries.push(entry);
-      window.sessionStorage.setItem(TRACE_KEY, entries.join("\\n"));
-    } catch {
-      // Diagnostic persistence is best-effort and must never affect authentication.
-    }
-  }
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(initialFeedback ? { type: "success", text: initialFeedback } : null);
 
   async function submit(formData: FormData) {
-    trace("submit_entered");
     setPending(true);
     setFeedback(null);
     const supabase = createClient();
@@ -56,7 +28,6 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     const password = String(formData.get("password") ?? "");
 
     if (mode === "connexion") {
-      trace("sign_in_call_reached");
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setFeedback({ type: "error", text: messageFor(error.message) });
@@ -100,45 +71,17 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
 
   const signup = mode === "inscription";
 
-  function loginFromButton(event: MouseEvent<HTMLButtonElement>) {
-    trace("login_button_click", event.nativeEvent.isTrusted);
-    if (signup || pending || !event.nativeEvent.isTrusted) return;
-    const form = event.currentTarget.form;
-    if (!form || !form.reportValidity()) return;
-    void submit(new FormData(form));
-  }
-
-  function loginFromEnter(event: KeyboardEvent<HTMLFormElement>) {
-    trace(`form_keydown_${event.key === "Enter" ? "enter" : "other"}`, event.nativeEvent.isTrusted);
-    if (signup || pending || event.key !== "Enter" || !event.nativeEvent.isTrusted) return;
-    const target = event.target;
-    if (!(target instanceof HTMLInputElement) || (target.name !== "email" && target.name !== "password")) return;
-
-    const form = event.currentTarget;
-    const email = form.elements.namedItem("email");
-    const password = form.elements.namedItem("password");
-    if (!(email instanceof HTMLInputElement) || !(password instanceof HTMLInputElement)) return;
-
-    // Only treat Enter as login intent when both credentials were already
-    // present before the key's default behavior. This prevents an Enter used
-    // to choose an autofill suggestion from simultaneously becoming login.
-    if (!email.value.trim() || !password.value) return;
-
+  function handleStandardLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    if (signup) return;
     event.preventDefault();
-    if (!form.reportValidity()) return;
-    void submit(new FormData(form));
-  }
-
-  function blockGenericLoginSubmit(event: FormEvent<HTMLFormElement>) {
-    trace("generic_submit_event", event.nativeEvent.isTrusted);
-    if (!signup) event.preventDefault();
+    if (pending) return;
+    void submit(new FormData(event.currentTarget));
   }
 
   return <form
     className="auth-form"
     action={signup ? submit : undefined}
-    onSubmit={signup ? undefined : blockGenericLoginSubmit}
-    onKeyDown={signup ? undefined : loginFromEnter}
+    onSubmit={signup ? undefined : handleStandardLoginSubmit}
     aria-busy={pending}
   >
     {signup && <div className="auth-name-grid">
@@ -149,8 +92,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     <PasswordField autoComplete={signup ? "new-password" : "current-password"} disabled={pending}/>
     {!signup && <Link className="auth-forgot" href="/auth/mot-de-passe-oublie">Mot de passe oublié ?</Link>}
     {feedback && <p className={feedback.type === "error" ? "auth-feedback error" : "auth-feedback"} role={feedback.type === "error" ? "alert" : "status"}>{feedback.text}</p>}
-    {!signup && <pre data-runtime-trace="boralog-auth-018" aria-label="Trace technique temporaire">{runtimeTrace.length ? runtimeTrace.join("\\n") : "0 trace_ready"}</pre>}
-    <button className="auth-submit" type={signup ? "submit" : "button"} disabled={pending} onClick={signup ? undefined : loginFromButton}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
+    <button className="auth-submit" type="submit" disabled={pending}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
     <p className="auth-switch">{signup ? <>Déjà un compte ? <Link href="/auth/connexion">Se connecter</Link></> : <>Nouveau sur Boralog ? <Link href="/auth/inscription">Créer un compte</Link></>}</p>
   </form>;
 }
