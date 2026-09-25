@@ -4,7 +4,18 @@ CREATE ROLE authenticated NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT 
 CREATE ROLE service_role NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS;
 GRANT authenticated, anon, service_role TO postgres;
 CREATE SCHEMA auth;
-CREATE TABLE auth.users (id uuid PRIMARY KEY, raw_user_meta_data jsonb NOT NULL DEFAULT '{}'::jsonb);
+CREATE TABLE auth.users (
+ id uuid PRIMARY KEY,
+ aud text,
+ role text,
+ email text,
+ encrypted_password text,
+ email_confirmed_at timestamptz,
+ raw_app_meta_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+ raw_user_meta_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+ created_at timestamptz NOT NULL DEFAULT now(),
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
  SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
 $$;
