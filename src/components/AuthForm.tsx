@@ -28,15 +28,11 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     const password = String(formData.get("password") ?? "");
 
     if (mode === "connexion") {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setFeedback({ type: "error", text: messageFor(error.message) });
         setPending(false);
         return;
-      }
-      const displayName = typeof data.user.user_metadata?.display_name === "string" ? data.user.user_metadata.display_name.trim() : "";
-      if (displayName) {
-        await supabase.from("profiles").upsert({ id: data.user.id, display_name: displayName, professional_email: data.user.email ?? email }, { onConflict: "id", ignoreDuplicates: true });
       }
       setFeedback({ type: "success", text: "Connecté." });
       router.replace("/");
@@ -63,12 +59,6 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     }
 
     if (data.session && data.user) {
-      const { error: profileError } = await supabase.from("profiles").insert({ id: data.user.id, display_name: displayName, professional_email: email });
-      if (profileError) {
-        setFeedback({ type: "error", text: "Le compte existe, mais le profil n’a pas pu être finalisé. Connectez-vous pour continuer." });
-        setPending(false);
-        return;
-      }
       setFeedback({ type: "success", text: "Compte créé et connecté." });
       router.replace("/");
       router.refresh();
