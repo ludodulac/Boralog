@@ -384,7 +384,7 @@ using (
 create policy "project membership select"
 on public.project_memberships for select to authenticated
 using (
-  user_id = auth.uid()
+  (user_id = auth.uid() and private.boralog_valid_project_assignment(project_id, user_id))
   or private.boralog_can_manage_project_memberships(project_id)
 );
 
