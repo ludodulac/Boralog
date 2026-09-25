@@ -142,10 +142,10 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$$$
   select p_target_user_id = auth.uid()
     and private.boralog_valid_project_assignment(p_project_id, p_target_user_id)
-$;
+$$$$;
 
 create or replace function private.boralog_can_assign_limited_to_project(
   p_project_id uuid,
@@ -156,10 +156,10 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$$$
   select private.boralog_can_manage_project_memberships(p_project_id)
     and private.boralog_valid_project_assignment(p_project_id, p_target_user_id)
-$;
+$$$$;
 
 alter function private.boralog_can_read_own_project_assignment(uuid, uuid) owner to postgres;
 alter function private.boralog_can_assign_limited_to_project(uuid, uuid) owner to postgres;
