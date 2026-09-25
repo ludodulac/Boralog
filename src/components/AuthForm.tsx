@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState, type FormEvent, type KeyboardEvent, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { PasswordField } from "./PasswordField";
@@ -18,6 +18,7 @@ function messageFor(error: string) {
 export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedback?: string }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const explicitLoginIntent = useRef(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(initialFeedback ? { type: "success", text: initialFeedback } : null);
 
   async function submit(formData: FormData) {
@@ -70,7 +71,33 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
   }
 
   const signup = mode === "inscription";
-  return <form className="auth-form" action={submit} aria-busy={pending}>
+
+  function markExplicitLoginClick(event: MouseEvent<HTMLButtonElement>) {
+    if (!signup && event.nativeEvent.isTrusted) explicitLoginIntent.current = true;
+  }
+
+  function markExplicitLoginEnter(event: KeyboardEvent<HTMLFormElement>) {
+    if (!signup && event.key === "Enter" && event.nativeEvent.isTrusted) explicitLoginIntent.current = true;
+  }
+
+  function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
+    if (signup) return;
+    event.preventDefault();
+
+    const explicit = explicitLoginIntent.current;
+    explicitLoginIntent.current = false;
+    if (!explicit || pending) return;
+
+    void submit(new FormData(event.currentTarget));
+  }
+
+  return <form
+    className="auth-form"
+    action={signup ? submit : undefined}
+    onSubmit={signup ? undefined : handleLoginSubmit}
+    onKeyDown={signup ? undefined : markExplicitLoginEnter}
+    aria-busy={pending}
+  >
     {signup && <div className="auth-name-grid">
       <label>Prénom<input name="firstName" autoComplete="given-name" required disabled={pending}/></label>
       <label>Nom<input name="lastName" autoComplete="family-name" required disabled={pending}/></label>
@@ -79,7 +106,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     <PasswordField autoComplete={signup ? "new-password" : "current-password"} disabled={pending}/>
     {!signup && <Link className="auth-forgot" href="/auth/mot-de-passe-oublie">Mot de passe oublié ?</Link>}
     {feedback && <p className={feedback.type === "error" ? "auth-feedback error" : "auth-feedback"} role={feedback.type === "error" ? "alert" : "status"}>{feedback.text}</p>}
-    <button className="auth-submit" type="submit" disabled={pending}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
+    <button className="auth-submit" type="submit" disabled={pending} onClick={signup ? undefined : markExplicitLoginClick}>{pending ? (signup ? "Création…" : "Connexion…") : (signup ? "Créer mon compte" : "Se connecter")}</button>
     <p className="auth-switch">{signup ? <>Déjà un compte ? <Link href="/auth/connexion">Se connecter</Link></> : <>Nouveau sur Boralog ? <Link href="/auth/inscription">Créer un compte</Link></>}</p>
   </form>;
 }
