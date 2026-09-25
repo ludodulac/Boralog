@@ -115,10 +115,10 @@ set role='admin'::public.membership_role, can_manage_members=false, can_manage_r
 where organization_id='10000000-0000-4000-8000-000000000001'
   and user_id='00000000-0000-4000-8000-000000000003';
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
-do $ begin begin
+do $$ begin begin
  insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');
  raise exception 'expected legacy role=admin to confer no authority';
-exception when insufficient_privilege or check_violation then null; end; end $;
+exception when insufficient_privilege or check_violation then null; end; end $$;
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
 update public.organization_memberships
@@ -126,10 +126,10 @@ set role=null, can_manage_members=true, can_manage_roles=false
 where organization_id='10000000-0000-4000-8000-000000000001'
   and user_id='00000000-0000-4000-8000-000000000003';
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
-do $ begin begin
+do $$ begin begin
  insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');
  raise exception 'expected legacy can_manage_members to confer no authority';
-exception when insufficient_privilege or check_violation then null; end; end $;
+exception when insufficient_privilege or check_violation then null; end; end $$;
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
 update public.organization_memberships
@@ -137,10 +137,10 @@ set can_manage_members=false, can_manage_roles=true
 where organization_id='10000000-0000-4000-8000-000000000001'
   and user_id='00000000-0000-4000-8000-000000000003';
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
-do $ begin begin
+do $$ begin begin
  insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');
  raise exception 'expected legacy can_manage_roles to confer no authority';
-exception when insufficient_privilege or check_violation then null; end; end $;
+exception when insufficient_privilege or check_violation then null; end; end $$;
 select pg_temp.assert_eq(count(*),0,'all legacy role/flags remain non-authoritative') from public.project_memberships where project_id='20000000-0000-4000-8000-000000000002' and user_id='00000000-0000-4000-8000-000000000003';
 
 do $$ begin begin
