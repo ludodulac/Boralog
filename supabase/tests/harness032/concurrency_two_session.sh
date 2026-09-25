@@ -51,7 +51,7 @@ cat /tmp/a.log; cat /tmp/b.log
 echo "SESSION_A_RC=$ARC SESSION_B_RC=$BRC"
 test "$ARC" -eq 0
 test "$BRC" -ne 0
-grep -q "cannot remove the last active owner" /tmp/b.log
+grep -q "an active organization must retain at least one active owner" /tmp/b.log
 COUNT=$($P -Atc "SELECT count(*) FROM public.organization_memberships WHERE organization_id='10000000-0000-4000-8000-000000000091' AND status='active' AND access_level='owner';")
 echo "ACTIVE_OWNER_FINAL_COUNT=$COUNT"
 test "$COUNT" -ge 1
