@@ -57,10 +57,14 @@ do $$ begin begin
  update public.organization_memberships set access_level='full' where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000001';
  if found then raise exception 'expected FULL modifying OWNER denial'; end if;
 exception when insufficient_privilege or check_violation then null; end; end $$;
-do $$ begin begin
+do $ begin begin
  update public.organization_memberships set access_level='owner' where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000002';
  if found then raise exception 'expected FULL self-promotion denial'; end if;
-exception when insufficient_privilege or check_violation then null; end; end $$;
+exception when insufficient_privilege or check_violation then null; end; end $;
+do $ begin begin
+ delete from public.organization_memberships where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000001';
+ if found then raise exception 'expected FULL deleting OWNER denial'; end if;
+exception when insufficient_privilege or check_violation then null; end; end $;
 
 do $$ begin begin
  update public.organization_memberships set user_id='00000000-0000-4000-8000-000000000005' where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000003';
@@ -86,15 +90,42 @@ select pg_temp.assert_eq(count(*),1,'LIMITED_A sees A1 exact') from public.proje
 select pg_temp.assert_eq(count(*),0,'LIMITED_A exact UUID A2 denied') from public.projects where id='20000000-0000-4000-8000-000000000002';
 select pg_temp.assert_eq(count(*),1,'LIMITED_A sees A1 event') from public.events where id='30000000-0000-4000-8000-000000000001';
 select pg_temp.assert_eq(count(*),0,'LIMITED_A cannot see A2 event') from public.events where id='30000000-0000-4000-8000-000000000002';
-insert into public.events (project_id,title,created_by) values ('20000000-0000-4000-8000-000000000001','LIMITED A1 WRITE','00000000-0000-4000-8000-000000000003');
+update public.events set title='A1 UPDATED BY LIMITED' where id='30000000-0000-4000-8000-000000000001';
+select pg_temp.assert_eq(count(*),1,'LIMITED_A event UPDATE A1 allowed') from public.events where id='30000000-0000-4000-8000-000000000001' and title='A1 UPDATED BY LIMITED';
+update public.events set title='A2 FORBIDDEN UPDATE' where id='30000000-0000-4000-8000-000000000002';
+select pg_temp.assert_eq(count(*),0,'LIMITED_A event UPDATE A2 affects no row') from public.events where id='30000000-0000-4000-8000-000000000002' and title='A2 FORBIDDEN UPDATE';
+delete from public.events where id='30000000-0000-4000-8000-000000000002';
+select pg_temp.assert_eq(count(*),0,'LIMITED_A event DELETE A2 cannot expose/delete row') from public.events where id='30000000-0000-4000-8000-000000000002';
+insert into public.events (id,project_id,title,created_by) values ('30000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000001','LIMITED A1 WRITE','00000000-0000-4000-8000-000000000003');
+delete from public.events where id='30000000-0000-4000-8000-000000000003';
+select pg_temp.assert_eq(count(*),0,'LIMITED_A event DELETE A1 allowed') from public.events where id='30000000-0000-4000-8000-000000000003';
 do $$ begin begin
  insert into public.events (project_id,title,created_by) values ('20000000-0000-4000-8000-000000000002','LIMITED A2 DENY','00000000-0000-4000-8000-000000000003');
  raise exception 'expected LIMITED A2 event denial';
 exception when insufficient_privilege or check_violation then null; end; end $$;
-do $$ begin begin
+do $ begin begin
  insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');
  raise exception 'expected LIMITED self-assignment denial';
-exception when insufficient_privilege or check_violation then null; end; end $$;
+exception when insufficient_privilege or check_violation then null; end; end $;
+
+-- Legacy authorization must be inert: role='admin' and can_manage_* confer no project authority.
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
+update public.organization_memberships
+set role='admin'::public.membership_role, can_manage_members=true, can_manage_roles=true
+where organization_id='10000000-0000-4000-8000-000000000001'
+  and user_id='00000000-0000-4000-8000-000000000003';
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
+do $ begin begin
+ insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');
+ raise exception 'expected legacy role=admin/can_manage_* to confer no authority';
+exception when insufficient_privilege or check_violation then null; end; end $;
+select pg_temp.assert_eq(count(*),0,'legacy role/flags do not self-assign A2') from public.project_memberships where project_id='20000000-0000-4000-8000-000000000002' and user_id='00000000-0000-4000-8000-000000000003';
+
+do $ begin begin
+ update public.project_memberships set role='admin'::public.membership_role
+ where project_id='20000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000003';
+ if found then raise exception 'expected project_memberships UPDATE denial'; end if;
+exception when insufficient_privilege or check_violation then null; end; end $;
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000004',true);
 select pg_temp.assert_eq(count(*),0,'LIMITED_B sees neither A1 nor A2') from public.projects where organization_id='10000000-0000-4000-8000-000000000001';
