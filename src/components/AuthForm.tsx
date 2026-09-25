@@ -73,7 +73,9 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
 
   function loginFromButton(event: MouseEvent<HTMLButtonElement>) {
     if (signup || pending || !event.nativeEvent.isTrusted) return;
-    void submit(new FormData(event.currentTarget.form!));
+    const form = event.currentTarget.form;
+    if (!form || !form.reportValidity()) return;
+    void submit(new FormData(form));
   }
 
   function loginFromEnter(event: KeyboardEvent<HTMLFormElement>) {
@@ -92,6 +94,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
     if (!email.value.trim() || !password.value) return;
 
     event.preventDefault();
+    if (!form.reportValidity()) return;
     void submit(new FormData(form));
   }
 
