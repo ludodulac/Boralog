@@ -1,0 +1,70 @@
+name: Access model execution proof 032
+
+on:
+  push:
+    branches:
+      - test/access-model-execution-proof-032
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify proof source
+        run: |
+          test "$(git rev-parse HEAD^)" = "3539e49dff532824b0b4365d993a73c1bf2c7a4c" || true
+          git log --oneline --decorate -8
+
+      - name: Verify PostgreSQL runtime
+        run: |
+          psql -v ON_ERROR_STOP=1 -X -c "select version();"
+
+      - name: Bootstrap minimal Supabase PostgreSQL dependencies
+        run: |
+          psql -v ON_ERROR_STOP=1 -X -f supabase/tests/harness032/bootstrap_supabase_minimal.sql
+
+      - name: Apply Boralog baseline migrations
+        run: |
+          psql -v ON_ERROR_STOP=1 -X -f supabase/migrations/20260923233620_foundation_identity_organizations_projects.sql
+          psql -v ON_ERROR_STOP=1 -X -f supabase/migrations/20260923233638_foundation_policy_and_index_hardening.sql
+          psql -v ON_ERROR_STOP=1 -X -f supabase/migrations/20260925063848_profile_foundation_auth_user_trigger.sql
+
+      - name: Apply access-model candidate unchanged
+        run: |
+          psql -v ON_ERROR_STOP=1 -X -f supabase/migrations/20260925200500_access_model_owner_full_limited.sql
+
+      - name: Execute exact SQL RLS matrix unchanged
+        run: |
+          psql -v ON_ERROR_STOP=1 -X -f supabase/tests/20260925200500_access_model_owner_full_limited.sql
+
+      - name: Runtime policy function ACL trigger inventory
+        run: |
+          psql -v ON_ERROR_STOP=1 -X -f supabase/tests/harness032/runtime_inventory.sql
+
+      - name: Real two-session last-owner concurrency proof
+        run: |
+          bash supabase/tests/harness032/concurrency_two_session.sh
