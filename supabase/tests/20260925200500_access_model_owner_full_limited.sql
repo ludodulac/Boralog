@@ -57,14 +57,14 @@ do $$ begin begin
  update public.organization_memberships set access_level='full' where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000001';
  if found then raise exception 'expected FULL modifying OWNER denial'; end if;
 exception when insufficient_privilege or check_violation then null; end; end $$;
-do $ begin begin
+do $$ begin begin
  update public.organization_memberships set access_level='owner' where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000002';
  if found then raise exception 'expected FULL self-promotion denial'; end if;
-exception when insufficient_privilege or check_violation then null; end; end $;
-do $ begin begin
+exception when insufficient_privilege or check_violation then null; end; end $$;
+do $$ begin begin
  delete from public.organization_memberships where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000001';
  if found then raise exception 'expected FULL deleting OWNER denial'; end if;
-exception when insufficient_privilege or check_violation then null; end; end $;
+exception when insufficient_privilege or check_violation then null; end; end $$;
 
 do $$ begin begin
  update public.organization_memberships set user_id='00000000-0000-4000-8000-000000000005' where organization_id='10000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000003';
@@ -103,10 +103,10 @@ do $$ begin begin
  insert into public.events (project_id,title,created_by) values ('20000000-0000-4000-8000-000000000002','LIMITED A2 DENY','00000000-0000-4000-8000-000000000003');
  raise exception 'expected LIMITED A2 event denial';
 exception when insufficient_privilege or check_violation then null; end; end $$;
-do $ begin begin
+do $$ begin begin
  insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');
  raise exception 'expected LIMITED self-assignment denial';
-exception when insufficient_privilege or check_violation then null; end; end $;
+exception when insufficient_privilege or check_violation then null; end; end $$;
 
 -- Legacy authorization must be inert: role='admin' and can_manage_* confer no project authority.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
@@ -115,17 +115,17 @@ set role='admin'::public.membership_role, can_manage_members=true, can_manage_ro
 where organization_id='10000000-0000-4000-8000-000000000001'
   and user_id='00000000-0000-4000-8000-000000000003';
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',true);
-do $ begin begin
+do $$ begin begin
  insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003');
  raise exception 'expected legacy role=admin/can_manage_* to confer no authority';
-exception when insufficient_privilege or check_violation then null; end; end $;
+exception when insufficient_privilege or check_violation then null; end; end $$;
 select pg_temp.assert_eq(count(*),0,'legacy role/flags do not self-assign A2') from public.project_memberships where project_id='20000000-0000-4000-8000-000000000002' and user_id='00000000-0000-4000-8000-000000000003';
 
-do $ begin begin
+do $$ begin begin
  update public.project_memberships set role='admin'::public.membership_role
  where project_id='20000000-0000-4000-8000-000000000001' and user_id='00000000-0000-4000-8000-000000000003';
  if found then raise exception 'expected project_memberships UPDATE denial'; end if;
-exception when insufficient_privilege or check_violation then null; end; end $;
+exception when insufficient_privilege or check_violation then null; end; end $$;
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000004',true);
 select pg_temp.assert_eq(count(*),0,'LIMITED_B sees neither A1 nor A2') from public.projects where organization_id='10000000-0000-4000-8000-000000000001';
