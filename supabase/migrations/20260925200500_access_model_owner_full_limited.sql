@@ -131,12 +131,47 @@ revoke execute on function private.boralog_org_access(uuid) from public, anon;
 revoke execute on function private.boralog_can_access_project(uuid) from public, anon;
 revoke execute on function private.boralog_can_manage_membership(uuid, public.organization_access_level) from public, anon;
 revoke execute on function private.boralog_can_manage_project_memberships(uuid) from public, anon;
-revoke execute on function private.boralog_valid_project_assignment(uuid, uuid) from public, anon;
+revoke execute on function private.boralog_valid_project_assignment(uuid, uuid) from public, anon, authenticated;
+
+create or replace function private.boralog_can_read_own_project_assignment(
+  p_project_id uuid,
+  p_target_user_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select p_target_user_id = auth.uid()
+    and private.boralog_valid_project_assignment(p_project_id, p_target_user_id)
+$;
+
+create or replace function private.boralog_can_assign_limited_to_project(
+  p_project_id uuid,
+  p_target_user_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select private.boralog_can_manage_project_memberships(p_project_id)
+    and private.boralog_valid_project_assignment(p_project_id, p_target_user_id)
+$;
+
+alter function private.boralog_can_read_own_project_assignment(uuid, uuid) owner to postgres;
+alter function private.boralog_can_assign_limited_to_project(uuid, uuid) owner to postgres;
+revoke execute on function private.boralog_can_read_own_project_assignment(uuid, uuid) from public, anon;
+revoke execute on function private.boralog_can_assign_limited_to_project(uuid, uuid) from public, anon;
+
 grant execute on function private.boralog_org_access(uuid) to authenticated;
 grant execute on function private.boralog_can_access_project(uuid) to authenticated;
 grant execute on function private.boralog_can_manage_membership(uuid, public.organization_access_level) to authenticated;
 grant execute on function private.boralog_can_manage_project_memberships(uuid) to authenticated;
-grant execute on function private.boralog_valid_project_assignment(uuid, uuid) to authenticated;
+grant execute on function private.boralog_can_read_own_project_assignment(uuid, uuid) to authenticated;
+grant execute on function private.boralog_can_assign_limited_to_project(uuid, uuid) to authenticated;
 
 -- Trigger-only privileged bootstrap. No client may execute it directly.
 create or replace function private.boralog_bootstrap_organization_owner()
@@ -297,11 +332,16 @@ for each row execute function private.boralog_guard_last_active_owner();
 drop policy if exists "organization creator insert" on public.organizations;
 drop policy if exists "organization creator select" on public.organizations;
 drop policy if exists "member organization select" on public.organizations;
+drop policy if exists "organization accessible select" on public.organizations;
 drop policy if exists "creator membership access" on public.organization_memberships;
 drop policy if exists "member project select" on public.projects;
 drop policy if exists "organization creator project insert" on public.projects;
 drop policy if exists "project member rows select" on public.project_memberships;
 drop policy if exists "org admin project member manage" on public.project_memberships;
+drop policy if exists "project membership accessible select" on public.project_memberships;
+drop policy if exists "project membership admin insert" on public.project_memberships;
+drop policy if exists "project membership admin update" on public.project_memberships;
+drop policy if exists "project membership admin delete" on public.project_memberships;
 drop policy if exists "project event select" on public.events;
 drop policy if exists "org staff event insert" on public.events;
 
@@ -384,15 +424,14 @@ using (
 create policy "project membership select"
 on public.project_memberships for select to authenticated
 using (
-  (user_id = auth.uid() and private.boralog_valid_project_assignment(project_id, user_id))
+  private.boralog_can_read_own_project_assignment(project_id, user_id)
   or private.boralog_can_manage_project_memberships(project_id)
 );
 
 create policy "project membership insert"
 on public.project_memberships for insert to authenticated
 with check (
-  private.boralog_can_manage_project_memberships(project_id)
-  and private.boralog_valid_project_assignment(project_id, user_id)
+  private.boralog_can_assign_limited_to_project(project_id, user_id)
 );
 
 create policy "project membership delete"
