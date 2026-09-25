@@ -90,15 +90,27 @@ select pg_temp.assert_eq(count(*),1,'LIMITED_A sees A1 exact') from public.proje
 select pg_temp.assert_eq(count(*),0,'LIMITED_A exact UUID A2 denied') from public.projects where id='20000000-0000-4000-8000-000000000002';
 select pg_temp.assert_eq(count(*),1,'LIMITED_A sees A1 event') from public.events where id='30000000-0000-4000-8000-000000000001';
 select pg_temp.assert_eq(count(*),0,'LIMITED_A cannot see A2 event') from public.events where id='30000000-0000-4000-8000-000000000002';
-update public.events set title='A1 UPDATED BY LIMITED' where id='30000000-0000-4000-8000-000000000001';
-select pg_temp.assert_eq(count(*),1,'LIMITED_A event UPDATE A1 allowed') from public.events where id='30000000-0000-4000-8000-000000000001' and title='A1 UPDATED BY LIMITED';
-update public.events set title='A2 FORBIDDEN UPDATE' where id='30000000-0000-4000-8000-000000000002';
-select pg_temp.assert_eq(count(*),0,'LIMITED_A event UPDATE A2 affects no row') from public.events where id='30000000-0000-4000-8000-000000000002' and title='A2 FORBIDDEN UPDATE';
-delete from public.events where id='30000000-0000-4000-8000-000000000002';
-select pg_temp.assert_eq(count(*),0,'LIMITED_A event DELETE A2 cannot expose/delete row') from public.events where id='30000000-0000-4000-8000-000000000002';
+do $ declare n bigint; begin
+ update public.events set title='A1 UPDATED BY LIMITED' where id='30000000-0000-4000-8000-000000000001';
+ get diagnostics n = row_count;
+ perform pg_temp.assert_eq(n,1,'LIMITED_A event UPDATE A1 allowed');
+end $;
+do $ declare n bigint; begin
+ update public.events set title='A2 FORBIDDEN UPDATE' where id='30000000-0000-4000-8000-000000000002';
+ get diagnostics n = row_count;
+ perform pg_temp.assert_eq(n,0,'LIMITED_A event UPDATE A2 denied by RLS');
+end $;
+do $ declare n bigint; begin
+ delete from public.events where id='30000000-0000-4000-8000-000000000002';
+ get diagnostics n = row_count;
+ perform pg_temp.assert_eq(n,0,'LIMITED_A event DELETE A2 denied by RLS');
+end $;
 insert into public.events (id,project_id,title,created_by) values ('30000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000001','LIMITED A1 WRITE','00000000-0000-4000-8000-000000000003');
-delete from public.events where id='30000000-0000-4000-8000-000000000003';
-select pg_temp.assert_eq(count(*),0,'LIMITED_A event DELETE A1 allowed') from public.events where id='30000000-0000-4000-8000-000000000003';
+do $ declare n bigint; begin
+ delete from public.events where id='30000000-0000-4000-8000-000000000003';
+ get diagnostics n = row_count;
+ perform pg_temp.assert_eq(n,1,'LIMITED_A event DELETE A1 allowed');
+end $;
 do $$ begin begin
  insert into public.events (project_id,title,created_by) values ('20000000-0000-4000-8000-000000000002','LIMITED A2 DENY','00000000-0000-4000-8000-000000000003');
  raise exception 'expected LIMITED A2 event denial';
