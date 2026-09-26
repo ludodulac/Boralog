@@ -1,0 +1,43 @@
+name: BORALOG 056 server action boundary
+on:
+  push:
+    branches:
+      - diag/create-organization-boundary-056
+permissions:
+  contents: read
+jobs:
+  boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify boundary source and compile
+        run: |
+          node --experimental-strip-types --test tests/organization-onboarding.test.ts
+          npm run build
+      - name: Prove pre-Supabase boundary statically
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const s = fs.readFileSync('src/app/organisations/nouvelle/actions.ts','utf8');
+          const marks = [
+            'normalizeOrganizationName(formData.get("name"))',
+            'String(formData.get("attempt_id") ?? "")',
+            'await createClient()',
+            'await supabase.auth.getUser()',
+            '.from("organizations")'
+          ];
+          let last=-1;
+          for (const m of marks) {
+            const i=s.indexOf(m);
+            if(i<0 || i<=last) throw new Error('boundary marker missing/out of order: '+m);
+            console.log('PASS boundary marker:',m);
+            last=i;
+          }
+          console.log('BOUNDARY_ORDER=FORM_DATA>CREATE_CLIENT>AUTH_GET_USER>ORGANIZATIONS');
+          NODE
