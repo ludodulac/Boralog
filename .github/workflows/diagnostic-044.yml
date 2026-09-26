@@ -1,0 +1,33 @@
+name: Diagnostic 044 machine probe
+
+on:
+  push:
+    branches:
+      - feat/first-organization-owner-onboarding-040
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for matching Netlify preview and probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://deploy-preview-6--boralog.netlify.app"
+          echo "Waiting for preview DNS/runtime..."
+          for i in $(seq 1 30); do
+            code=$(curl -L -sS -o /tmp/root.html -w "%{http_code}" --max-time 15 "$URL/" || true)
+            if [ "$code" != "000" ]; then
+              echo "ROOT_HTTP=$code"
+              break
+            fi
+            sleep 10
+          done
+          echo "=== /auth/connexion ==="
+          curl -L -sS -D /tmp/auth.headers -o /tmp/auth.body --max-time 30 "$URL/auth/connexion" || true
+          head -20 /tmp/auth.headers || true
+          echo "AUTH_BODY_PREFIX=$(head -c 160 /tmp/auth.body | tr '\n' ' ' || true)"
+          echo "=== diagnostic probe ==="
+          curl -sS -D /tmp/probe.headers -o /tmp/probe.body --max-time 30 "$URL/auth/diagnostic/identity" || true
+          cat /tmp/probe.headers || true
+          cat /tmp/probe.body || true
