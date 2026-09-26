@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { MainNavigation } from "./MainNavigation";
 import { SecondaryMenu } from "./SecondaryMenu";
 
-export type AppShellIdentity = {
+type Identity = {
   userId: string | null;
   email: string | null;
   profile: { id: string; display_name: string; professional_email: string | null } | null;
@@ -13,12 +13,15 @@ export type AppShellIdentity = {
   hasOrganization: boolean;
 };
 
-export function AppShellRender({ children, identity, pathname }: { children: React.ReactNode; identity: AppShellIdentity; pathname: string }) {
+export function AppShell({ children, identity }: { children: React.ReactNode; identity: Identity }) {
+  const pathname = usePathname();
   if (pathname.startsWith("/auth")) return <>{children}</>;
+
   const displayName = identity.profile?.display_name || identity.email || "Compte Boralog";
   const isOnboardingRoute = pathname.startsWith("/organisations/nouvelle");
   const showRequestedContent = pathname === "/moi" || isOnboardingRoute;
   const organizationName = identity.organization?.name ?? "Aucune structure";
+
   return <div className="app-shell">
     <MainNavigation organizationName={organizationName} organizationRole={displayName} pathname={pathname}/>
     <section className="workspace">
@@ -40,8 +43,4 @@ export function AppShellRender({ children, identity, pathname }: { children: Rea
       )}
     </section>
   </div>;
-}
-
-export function AppShell({ children, identity }: { children: React.ReactNode; identity: AppShellIdentity }) {
-  return <AppShellRender identity={identity} pathname={usePathname()}>{children}</AppShellRender>;
 }
