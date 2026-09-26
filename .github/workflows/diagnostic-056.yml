@@ -25,7 +25,7 @@ jobs:
           pid=$!
           trap 'kill $pid || true' EXIT
           sleep 2
-          status=$(curl -sS -o /tmp/page056.html -w '%{http_code}' http://127.0.0.1:3056/diagnostic-056 || true)
+          status=$(curl -sS -o /tmp/page056.html -w '%{http_code}' http://127.0.0.1:3056/auth/diagnostic-056 || true)
           echo "DIAGNOSTIC_GET_STATUS=$status"
           echo "=== SANITIZED_FORM_MARKUP ==="
           grep -oE '<form[^>]*>|<input[^>]*>' /tmp/page056.html 2>/dev/null | sed -E 's/value="[^"]*"/value="[SANITIZED]"/g' | head -40 || true
