@@ -1,0 +1,14 @@
+name: Diagnostic 046 cookie contract
+on:
+  push:
+    branches: [feat/first-organization-owner-onboarding-040]
+jobs:
+  cookie-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - name: COOKIE_TEST_MATRIX
+        run: node --experimental-strip-types --test tests/diagnostic-046-cookie-contract.test.ts
