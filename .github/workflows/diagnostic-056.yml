@@ -29,6 +29,37 @@ jobs:
           echo "DIAGNOSTIC_GET_STATUS=$status"
           echo "=== SANITIZED_FORM_MARKUP ==="
           grep -oE '<form[^>]*>|<input[^>]*>' /tmp/page056.html 2>/dev/null | sed -E 's/value="[^"]*"/value="[SANITIZED]"/g' | head -40 || true
+          echo "=== SERVER_ACTION_POSTS ==="
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('/tmp/page056.html', 'utf8');
+          const decode = s => s.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+          const hidden = [...html.matchAll(/<input\s+([^>]+)>/g)]
+            .map(m => m[1])
+            .map(attrs => {
+              const name = attrs.match(/name="([^"]+)"/)?.[1];
+              const value = attrs.match(/value="([^"]*)"/)?.[1] ?? '';
+              const type = attrs.match(/type="([^"]+)"/)?.[1] ?? '';
+              return {name, value: decode(value), type};
+            })
+            .filter(x => x.name && (x.type === 'hidden' || x.name.startsWith('$ACTION_')));
+          async function submit(label, nameValue, attemptValue) {
+            const fd = new FormData();
+            for (const x of hidden) fd.append(x.name, x.value);
+            fd.set('name', nameValue);
+            fd.set('attempt_id', attemptValue);
+            const res = await fetch('http://127.0.0.1:3056/auth/diagnostic-056', {method:'POST', body:fd, redirect:'manual'});
+            const body = await res.text();
+            console.log(label+'_STATUS='+res.status);
+            console.log(label+'_HAS_NAME_ERROR='+body.includes('Saisissez le nom de votre structure.'));
+            console.log(label+'_HAS_ATTEMPT_ERROR='+body.includes('Cette tentative de création'));
+            console.log(label+'_BODY_BYTES='+body.length);
+          }
+          (async()=>{
+            await submit('INVALID_NAME', '', '00000000-0000-4000-8000-000000000056');
+            await submit('INVALID_ATTEMPT', 'Diagnostic', 'not-a-uuid');
+          })().catch(e=>{ console.error('ACTION_HARNESS_EXCEPTION', e.name, e.message, e.stack); process.exit(1); });
+          NODE
           echo "=== NEXT_STDERR_STDOUT ==="
           cat /tmp/next056.log
           test "$status" = "200"
