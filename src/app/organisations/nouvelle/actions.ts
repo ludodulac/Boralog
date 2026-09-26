@@ -16,7 +16,7 @@ export async function createOrganization(
   formData: FormData
 ): Promise<CreateOrganizationState> {
   const parsedName = normalizeOrganizationName(formData.get("name"));
-  if (!("value" in parsedName)) return { status: "error", message: parsedName.error };
+  if (!parsedName.ok) return { status: "error", message: parsedName.error };
 
   const attemptId = String(formData.get("attempt_id") ?? "");
   if (!isUuid(attemptId)) return { status: "error", message: "Cette tentative de création n’est plus valide. Rechargez la page puis réessayez." };

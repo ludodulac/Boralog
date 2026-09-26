@@ -1,10 +1,14 @@
 export const ORGANIZATION_NAME_MAX_LENGTH = 160;
 
-export function normalizeOrganizationName(value: unknown) {
+export type OrganizationNameResult =
+  | { ok: true; value: string }
+  | { ok: false; error: string };
+
+export function normalizeOrganizationName(value: unknown): OrganizationNameResult {
   const name = String(value ?? "").trim().replace(/\s+/g, " ");
-  if (!name) return { error: "Saisissez le nom de votre structure." } as const;
-  if (name.length > ORGANIZATION_NAME_MAX_LENGTH) return { error: "Le nom ne peut pas dépasser 160 caractères." } as const;
-  return { value: name } as const;
+  if (!name) return { ok: false, error: "Saisissez le nom de votre structure." };
+  if (name.length > ORGANIZATION_NAME_MAX_LENGTH) return { ok: false, error: "Le nom ne peut pas dépasser 160 caractères." };
+  return { ok: true, value: name };
 }
 
 export function isUuid(value: string) {

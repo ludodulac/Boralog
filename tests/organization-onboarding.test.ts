@@ -7,11 +7,11 @@ const attemptA = "123e4567-e89b-42d3-a456-426614174000";
 const attemptB = "223e4567-e89b-42d3-a456-426614174000";
 
 test("empty organization name is rejected", () => {
-  assert.ok("error" in normalizeOrganizationName("   "));
+  assert.equal(normalizeOrganizationName("   ").ok, false);
 });
 
 test("valid organization name is normalized", () => {
-  assert.deepEqual(normalizeOrganizationName("  Compagnie   Bora Bora  "), { value: "Compagnie Bora Bora" });
+  assert.deepEqual(normalizeOrganizationName("  Compagnie   Bora Bora  "), { ok: true, value: "Compagnie Bora Bora" });
 });
 
 test("French accents produce a schema-compatible slug", () => {
