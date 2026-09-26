@@ -14,17 +14,18 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Start Next and inspect diagnostic form
+      - name: Start Next and capture diagnostic runtime
         shell: bash
         run: |
-          set -euo pipefail
+          set -u
           PORT=3056 npm start > /tmp/next056.log 2>&1 &
           pid=$!
           trap 'kill $pid || true' EXIT
-          for i in {1..40}; do
-            if curl -fsS http://127.0.0.1:3056/diagnostic-056 -o /tmp/page056.html; then break; fi
-            sleep 1
-          done
-          grep -oE '<form[^>]*>|<input[^>]*>' /tmp/page056.html | sed -E 's/value="[^"]*"/value="[SANITIZED]"/g' | head -40
+          sleep 2
+          status=$(curl -sS -o /tmp/page056.html -w '%{http_code}' http://127.0.0.1:3056/diagnostic-056 || true)
+          echo "DIAGNOSTIC_GET_STATUS=$status"
+          echo "=== SANITIZED_FORM_MARKUP ==="
+          grep -oE '<form[^>]*>|<input[^>]*>' /tmp/page056.html 2>/dev/null | sed -E 's/value="[^"]*"/value="[SANITIZED]"/g' | head -40 || true
           echo "=== NEXT_STDERR_STDOUT ==="
           cat /tmp/next056.log
+          test "$status" = "200"
