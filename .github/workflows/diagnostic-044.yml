@@ -9,25 +9,18 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for matching Netlify preview and probe
+      - name: Probe immutable diagnostic deploy
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://deploy-preview-6--boralog.netlify.app"
-          echo "Waiting for preview DNS/runtime..."
-          for i in $(seq 1 30); do
-            code=$(curl -L -sS -o /tmp/root.html -w "%{http_code}" --max-time 15 "$URL/" || true)
-            if [ "$code" != "000" ]; then
-              echo "ROOT_HTTP=$code"
-              break
-            fi
-            sleep 10
+          URL="https://6ab77e0330b21a00089bb8aa--boralog.netlify.app"
+          for path in "/" "/moi" "/auth/connexion"; do
+            echo "=== $path ==="
+            curl -L -sS -D /tmp/headers -o /tmp/body --max-time 30 "$URL$path" || true
+            head -20 /tmp/headers || true
+            echo "BODY_PREFIX=$(head -c 180 /tmp/body | tr '\n' ' ' || true)"
           done
-          echo "=== /auth/connexion ==="
-          curl -L -sS -D /tmp/auth.headers -o /tmp/auth.body --max-time 30 "$URL/auth/connexion" || true
-          head -20 /tmp/auth.headers || true
-          echo "AUTH_BODY_PREFIX=$(head -c 160 /tmp/auth.body | tr '\n' ' ' || true)"
-          echo "=== diagnostic probe ==="
+          echo "=== /auth/diagnostic/identity ==="
           curl -sS -D /tmp/probe.headers -o /tmp/probe.body --max-time 30 "$URL/auth/diagnostic/identity" || true
           cat /tmp/probe.headers || true
           cat /tmp/probe.body || true
