@@ -1,12 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createOrganization, initialCreateOrganizationState } from "./actions";
 
-export function CreateOrganizationForm() {
+export function CreateOrganizationForm({ attemptId }: { attemptId: string }) {
   const router = useRouter();
-  const attemptId = useRef<string>(crypto.randomUUID());
   const [state, action, pending] = useActionState(createOrganization, initialCreateOrganizationState);
 
   useEffect(() => {
@@ -17,7 +16,7 @@ export function CreateOrganizationForm() {
   }, [router, state.status]);
 
   return <form className="organization-form" action={action} aria-busy={pending}>
-    <input type="hidden" name="attempt_id" value={attemptId.current}/>
+    <input type="hidden" name="attempt_id" value={attemptId}/>
     <label>
       Nom de la structure
       <input name="name" maxLength={160} autoComplete="organization" required disabled={pending} autoFocus/>
