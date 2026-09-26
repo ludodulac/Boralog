@@ -15,6 +15,7 @@ export async function createOrganization(
   _previousState: CreateOrganizationState = initialCreateOrganizationState,
   formData: FormData
 ): Promise<CreateOrganizationState> {
+  console.log("ACTION_ENTERED");
   const parsedName = normalizeOrganizationName(formData.get("name"));
   if (!parsedName.ok) return { status: "error", message: parsedName.error };
 
@@ -22,7 +23,9 @@ export async function createOrganization(
   if (!isUuid(attemptId)) return { status: "error", message: "Cette tentative de création n’est plus valide. Rechargez la page puis réessayez." };
 
   const supabase = await createClient();
+  console.log("CREATE_CLIENT_COMPLETED");
   const { data: authData, error: authError } = await supabase.auth.getUser();
+  console.log("AUTH_GETUSER_COMPLETED");
   if (authError || !authData.user) {
     return { status: "error", message: "Votre session n’est plus valide. Reconnectez-vous puis réessayez." };
   }
