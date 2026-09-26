@@ -1,6 +1,8 @@
 name: BORALOG 053 clean CI proof
 
 on:
+  push:
+    branches: [feat/first-organization-owner-onboarding-040]
   workflow_dispatch:
 
 permissions:
