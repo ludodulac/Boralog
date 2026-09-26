@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - diag/create-organization-boundary-056
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
