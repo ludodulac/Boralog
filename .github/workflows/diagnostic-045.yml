@@ -1,0 +1,37 @@
+name: Diagnostic 045 authenticated render discrimination
+on:
+  push:
+    branches: [feat/first-organization-owner-onboarding-040]
+jobs:
+  identity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - name: IDENTITY_CONSTRUCTION
+        run: node --experimental-strip-types --test tests/diagnostic-045.test.ts
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait and machine-render immutable diagnostic preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          ALIAS="https://deploy-preview-6--boralog.netlify.app"
+          for i in $(seq 1 40); do
+            html=$(curl -L -sS --max-time 20 "$ALIAS/auth/diagnostic/render-no-org" || true)
+            if printf '%s' "$html" | grep -Fq "Votre compte Boralog est prêt."; then break; fi
+            sleep 10
+          done
+          printf '%s' "$html" | grep -F "Votre compte Boralog est prêt."
+          printf '%s' "$html" | grep -F "Vous n&#x27;avez pas encore de structure."
+          printf '%s' "$html" | grep -F "Créer une structure"
+          echo "APPSHELL_NO_ORG_RENDER=PASS"
+          org=$(curl -L -sS --max-time 30 "$ALIAS/auth/diagnostic/render-with-org")
+          printf '%s' "$org" | grep -F "Structure Test"
+          printf '%s' "$org" | grep -F "Votre structure est prête."
+          printf '%s' "$org" | grep -F "Aucun projet pour le moment."
+          if printf '%s' "$org" | grep -Fq "DEMO_FIXTURE_SENTINEL_045"; then echo "DEMO_SENTINEL_RENDERED=FAIL"; exit 1; fi
+          echo "APPSHELL_WITH_ORG_RENDER=PASS"
