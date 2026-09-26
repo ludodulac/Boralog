@@ -1,0 +1,30 @@
+name: Diagnostic 056 Server Action Boundary
+on:
+  push:
+    branches: [diag/create-organization-boundary-056]
+jobs:
+  boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Start Next and inspect diagnostic form
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT=3056 npm start > /tmp/next056.log 2>&1 &
+          pid=$!
+          trap 'kill $pid || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:3056/diagnostic-056 -o /tmp/page056.html; then break; fi
+            sleep 1
+          done
+          grep -oE '<form[^>]*>|<input[^>]*>' /tmp/page056.html | sed -E 's/value="[^"]*"/value="[SANITIZED]"/g' | head -40
+          echo "=== NEXT_STDERR_STDOUT ==="
+          cat /tmp/next056.log
