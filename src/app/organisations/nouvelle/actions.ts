@@ -35,18 +35,16 @@ export async function createOrganization(
     return { status: "success", message: "Structure créée" };
   }
 
-  const { data: organization, error } = await supabase
+  const { error } = await supabase
     .from("organizations")
     .insert({
       id: attemptId,
       name: parsedName.value,
       slug: organizationSlug(parsedName.value, attemptId),
       created_by: authData.user.id,
-    })
-    .select("id")
-    .maybeSingle();
+    });
 
-  if (error || !organization) {
+  if (error) {
     // One last RLS-scoped read distinguishes an unknown/lost response from a true failure.
     const { data: recovered } = await supabase
       .from("organizations")
