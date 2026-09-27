@@ -29,6 +29,17 @@ test("server action owns created_by and never writes memberships", () => {
   assert.doesNotMatch(source, /from\(["']organization_memberships/);
 });
 
+test("organization insert does not request RETURNING visibility", () => {
+  const source = fs.readFileSync("src/app/organisations/nouvelle/actions.ts", "utf8");
+  const insertStart = source.indexOf('.from("organizations")\n    .insert({');
+  const errorBranch = source.indexOf("\n\n  if (error) {", insertStart);
+  assert.ok(insertStart >= 0 && errorBranch > insertStart);
+  const insertChain = source.slice(insertStart, errorBranch);
+  assert.doesNotMatch(insertChain, /\.select\s*\(/);
+  assert.doesNotMatch(insertChain, /\.single\s*\(|\.maybeSingle\s*\(/);
+  assert.match(insertChain, /id:\s*attemptId/);
+});
+
 test("same attempt id is read before insert for lost-response recovery", () => {
   const source = fs.readFileSync("src/app/organisations/nouvelle/actions.ts", "utf8");
   const read = source.indexOf('.eq("id", attemptId)');
