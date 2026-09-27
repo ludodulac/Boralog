@@ -3,13 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "../../../lib/supabase/server";
 import { isUuid, normalizeOrganizationName, organizationSlug } from "../../../lib/organization-onboarding";
+import { initialCreateOrganizationState, type CreateOrganizationState } from "./state";
 
-export type CreateOrganizationState = {
-  status: "idle" | "success" | "error";
-  message: string;
-};
-
-export const initialCreateOrganizationState: CreateOrganizationState = { status: "idle", message: "" };
+export type { CreateOrganizationState } from "./state";
 
 export async function createOrganization(
   _previousState: CreateOrganizationState = initialCreateOrganizationState,
