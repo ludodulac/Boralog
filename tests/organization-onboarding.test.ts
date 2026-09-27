@@ -116,3 +116,19 @@ test("real project success route reads projects and not demo fixtures", () => {
   assert.match(source, /from\("projects"\)/);
   assert.doesNotMatch(source, /demoProjects|demoToday|data\/demo/);
 });
+
+test("real structure home loads projects filtered by current organization", () => {
+  const source = fs.readFileSync("src/app/page.tsx", "utf8");
+  assert.match(source, /from\("projects"\)/);
+  assert.match(source, /\.eq\("organization_id", identity\.organization\.id\)/);
+  assert.match(source, /\.is\("archived_at", null\)/);
+  assert.doesNotMatch(source, /demoProjects|demoToday|data\/demo/);
+});
+
+test("real structure home conditionally renders empty state and project links", () => {
+  const source = fs.readFileSync("src/app/page.tsx", "utf8");
+  assert.match(source, /realProjects\.length === 0/);
+  assert.match(source, /Aucun projet pour le moment/);
+  assert.match(source, /href=\{\`\/projets\/reel\/\$\{project\.id\}\`\}/);
+  assert.match(source, /href="\/projets\/nouveau"/);
+});
