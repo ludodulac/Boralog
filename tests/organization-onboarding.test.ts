@@ -84,3 +84,35 @@ test("project creation UI slice is deliberately write-free", () => {
   assert.match(source, /type="button" disabled/);
   assert.doesNotMatch(source, /supabase|\.insert\s*\(|action=|useActionState/);
 });
+
+test("project create action resolves auth and organization server-side", () => {
+  const source = fs.readFileSync("src/app/projets/nouveau/actions.ts", "utf8");
+  assert.match(source, /supabase\.auth\.getUser\(\)/);
+  assert.match(source, /from\("organization_memberships"\)/);
+  assert.match(source, /organization_id:\s*membership\.organization_id/);
+  assert.match(source, /created_by:\s*authData\.user\.id/);
+  assert.doesNotMatch(source, /formData\.get\(["']organization_id/);
+});
+
+test("project insert never requests RETURNING visibility", () => {
+  const source = fs.readFileSync("src/app/projets/nouveau/actions.ts", "utf8");
+  const insertStart = source.indexOf('.from("projects")\n    .insert({');
+  const errorBranch = source.indexOf("\n\n  if (error) {", insertStart);
+  assert.ok(insertStart >= 0 && errorBranch > insertStart);
+  const insertChain = source.slice(insertStart, errorBranch);
+  assert.doesNotMatch(insertChain, /\.select\s*\(/);
+  assert.doesNotMatch(insertChain, /\.single\s*\(|\.maybeSingle\s*\(/);
+  assert.match(insertChain, /id:\s*attemptId/);
+});
+
+test("project form protects against repeated submit while pending", () => {
+  const source = fs.readFileSync("src/app/projets/nouveau/CreateProjectForm.tsx", "utf8");
+  assert.match(source, /disabled=\{pending\}/);
+  assert.match(source, /pending \? "Création…" : "Créer le projet"/);
+});
+
+test("real project success route reads projects and not demo fixtures", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/page.tsx", "utf8");
+  assert.match(source, /from\("projects"\)/);
+  assert.doesNotMatch(source, /demoProjects|demoToday|data\/demo/);
+});
