@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createOrganization, initialCreateOrganizationState } from "./actions";
+import { createOrganization } from "./actions";
+import { initialCreateOrganizationState } from "./state";
 
 export function CreateOrganizationForm({ attemptId }: { attemptId: string }) {
   const router = useRouter();
