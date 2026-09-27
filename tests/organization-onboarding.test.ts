@@ -70,3 +70,17 @@ test("no-organization UX exposes creation CTA", () => {
   assert.match(shell, /Vous n&apos;avez pas encore de structure/);
   assert.match(shell, /href="\/organisations\/nouvelle"/);
 });
+
+test("real organization empty state exposes first project CTA", () => {
+  const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
+  assert.match(shell, /href="\/projets\/nouveau"/);
+  assert.match(shell, /Créer un projet/);
+});
+
+test("project creation UI slice is deliberately write-free", () => {
+  const source = fs.readFileSync("src/app/projets/nouveau/page.tsx", "utf8");
+  assert.match(source, /name="name"/);
+  assert.match(source, /name="description"/);
+  assert.match(source, /type="button" disabled/);
+  assert.doesNotMatch(source, /supabase|\.insert\s*\(|action=|useActionState/);
+});
