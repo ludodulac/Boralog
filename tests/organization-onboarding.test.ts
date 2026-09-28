@@ -164,3 +164,43 @@ test("first real date UI is context-bound and deliberately write-free", () => {
   assert.doesNotMatch(source, /name="project_id"|name="created_by"|name="status"|\.insert\s*\(|action=|demo/);
   assert.match(source, /type="button" disabled/);
 });
+
+test("real date creation is server-authenticated and project-bound", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  assert.match(source, /supabase\.auth\.getUser\(\)/);
+  assert.match(source, /from\("projects"\).*select\("id"\).*eq\("id", projectId\)/s);
+  assert.match(source, /project_id:\s*projectId/);
+  assert.match(source, /created_by:\s*authData\.user\.id/);
+  assert.match(source, /status:\s*"draft"/);
+});
+
+test("event_date stays civil and missing time writes NULL starts_at", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  assert.match(source, /event_date:\s*values\.date/);
+  assert.match(source, /if \(!time\) return \{ ok: true as const, value: null \}/);
+  assert.match(source, /starts_at:\s*startsAt\.value/);
+});
+
+test("real date insert does not request RETURNING visibility", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  const insertStart = source.indexOf('.from("events").insert({');
+  const errorBranch = source.indexOf("\n\n  if (error) {", insertStart);
+  assert.ok(insertStart >= 0 && errorBranch > insertStart);
+  const insertChain = source.slice(insertStart, errorBranch);
+  assert.doesNotMatch(insertChain, /\.select\s*\(|\.single\s*\(|\.maybeSingle\s*\(/);
+});
+
+test("date form exposes pending state and disables controls", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/CreateDateForm.tsx", "utf8");
+  assert.match(source, /disabled=\{pending\}/);
+  assert.match(source, /pending \? "Enregistrement…" : "Créer la date"/);
+  assert.match(source, /timezone_offset/);
+});
+
+test("Dates page reads only real events for the current project", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/page.tsx", "utf8");
+  assert.match(source, /from\("events"\)/);
+  assert.match(source, /\.eq\("project_id", project\.id\)/);
+  assert.match(source, /realDates\.length === 0/);
+  assert.doesNotMatch(source, /demoToday|demoProjects|data\/demo/);
+});
