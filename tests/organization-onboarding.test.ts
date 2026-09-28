@@ -155,14 +155,19 @@ test("Dates is the only interactive future project area", () => {
   assert.match(source, /<span>Dates<\/span>/);
 });
 
-test("first real date UI is context-bound and deliberately write-free", () => {
-  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/page.tsx", "utf8");
-  assert.match(source, /name="date" type="date" required/);
-  assert.match(source, /name="time" type="time"/);
-  assert.match(source, /name="city"/);
-  assert.match(source, /name="venue"/);
-  assert.doesNotMatch(source, /name="project_id"|name="created_by"|name="status"|\.insert\s*\(|action=|demo/);
-  assert.match(source, /type="button" disabled/);
+test("first real date UI keeps required fields and uses the extracted submit form", () => {
+  const page = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/page.tsx", "utf8");
+  const form = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/CreateDateForm.tsx", "utf8");
+  assert.match(page, /import \{ CreateDateForm \} from "\.\/CreateDateForm"/);
+  assert.match(page, /<CreateDateForm projectId=\{project\.id\}\/>/);
+  assert.doesNotMatch(page, /\.insert\s*\(|demo/);
+  assert.match(form, /name="date" type="date" required/);
+  assert.match(form, /name="time" type="time"/);
+  assert.match(form, /name="city"/);
+  assert.match(form, /name="venue"/);
+  assert.match(form, /<form className="date-create-form" action=\{action\}/);
+  assert.match(form, /type="submit"/);
+  assert.doesNotMatch(form, /demo/);
 });
 
 test("first real date insert is authenticated and project-bound", () => {
