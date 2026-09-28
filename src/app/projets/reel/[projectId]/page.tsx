@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "../../../../lib/supabase/server";
 
+const futureAreas = ["Dates", "Informations", "Messages", "Équipe", "Documents"];
+
 export default async function RealProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const supabase = await createClient();
@@ -16,13 +18,26 @@ export default async function RealProjectPage({ params }: { params: Promise<{ pr
   if (!project) notFound();
 
   const joined = Array.isArray(project.organizations) ? project.organizations[0] : project.organizations;
-  return <main className="entity-page"><div className="entity-wrap">
-    <Link className="entity-back" href="/">← Structure</Link>
-    <header className="entity-header">
-      <p className="eyebrow">{joined?.name?.toUpperCase() ?? "PROJET"}</p>
+  const organizationName = joined?.name ?? "Structure";
+
+  return <main className="entity-page"><div className="entity-wrap project-v1">
+    <Link className="entity-back" href="/">← {organizationName}</Link>
+    <header className="entity-header project-v1-header">
+      <p className="eyebrow">PROJET · {organizationName.toUpperCase()}</p>
       <h1>{project.name}</h1>
-      <p>{project.description || "Projet créé. Les détails pourront être ajoutés ensuite."}</p>
+      {project.description && <p>{project.description}</p>}
     </header>
-    <section className="entity-section entity-placeholder"><h2>Projet créé</h2><p>Ce projet est enregistré dans Boralog. Les dates, l’équipe et les messages ne font pas encore partie de cette tranche.</p></section>
+    <section className="project-v1-space" aria-labelledby="project-space-title">
+      <div className="project-v1-space-heading">
+        <h2 id="project-space-title">Espace projet</h2>
+        <p>Les espaces de travail seront disponibles progressivement.</p>
+      </div>
+      <div className="project-v1-areas" aria-label="Espaces à venir">
+        {futureAreas.map((area) => <div className="project-v1-area" key={area}>
+          <span>{area}</span>
+          <small>À venir</small>
+        </div>)}
+      </div>
+    </section>
   </div></main>;
 }

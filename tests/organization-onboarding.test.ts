@@ -132,3 +132,19 @@ test("real structure home conditionally renders empty state and project links", 
   assert.match(source, /href=\{\`\/projets\/reel\/\$\{project\.id\}\`\}/);
   assert.match(source, /href="\/projets\/nouveau"/);
 });
+
+test("real project page is a durable project sheet using only real project data", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/page.tsx", "utf8");
+  assert.match(source, /← \{organizationName\}/);
+  assert.match(source, /PROJET · \{organizationName\.toUpperCase\(\)\}/);
+  assert.match(source, /\{project\.name\}/);
+  assert.match(source, /project\.description &&/);
+  assert.doesNotMatch(source, /Projet créé|Ce projet est enregistré dans Boralog|demoProjects|demoToday|data\/demo/);
+});
+
+test("future project areas are visibly non-interactive", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/page.tsx", "utf8");
+  for (const area of ["Dates", "Informations", "Messages", "Équipe", "Documents"]) assert.match(source, new RegExp(area));
+  assert.match(source, /<small>À venir<\/small>/);
+  assert.doesNotMatch(source, /futureAreas\.map[\s\S]*?<Link|futureAreas\.map[\s\S]*?<button/);
+});
