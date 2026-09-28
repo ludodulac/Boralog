@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "../../../../lib/supabase/server";
 
-const futureAreas = ["Dates", "Informations", "Messages", "Équipe", "Documents"];
+const futureAreas = ["Informations", "Messages", "Équipe", "Documents"];
 
 export default async function RealProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -32,7 +32,11 @@ export default async function RealProjectPage({ params }: { params: Promise<{ pr
         <h2 id="project-space-title">Espace projet</h2>
         <p>Les espaces de travail seront disponibles progressivement.</p>
       </div>
-      <div className="project-v1-areas" aria-label="Espaces à venir">
+      <div className="project-v1-areas" aria-label="Espaces du projet">
+        <Link className="project-v1-area project-v1-area-link" href={`/projets/reel/${project.id}/dates`}>
+          <span>Dates</span>
+          <small>Ouvrir →</small>
+        </Link>
         {futureAreas.map((area) => <div className="project-v1-area" key={area}>
           <span>{area}</span>
           <small>À venir</small>

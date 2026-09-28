@@ -65,6 +65,12 @@ test("real organization boundary does not render demo fixtures", () => {
   assert.match(shell, /identity\.organization\.name/);
 });
 
+test("calendar route renders its requested child for an existing organization", () => {
+  const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
+  assert.match(shell, /const isCalendarRoute = pathname === "\/calendrier"/);
+  assert.match(shell, /isRealProjectRoute \|\| isCalendarRoute \? children/);
+});
+
 test("no-organization UX exposes creation CTA", () => {
   const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
   assert.match(shell, /Vous n&apos;avez pas encore de structure/);
@@ -144,7 +150,62 @@ test("real project page is a durable project sheet using only real project data"
 
 test("future project areas are visibly non-interactive", () => {
   const source = fs.readFileSync("src/app/projets/reel/[projectId]/page.tsx", "utf8");
-  for (const area of ["Dates", "Informations", "Messages", "Équipe", "Documents"]) assert.match(source, new RegExp(area));
+  for (const area of ["Informations", "Messages", "Équipe", "Documents"]) assert.match(source, new RegExp(area));
   assert.match(source, /<small>À venir<\/small>/);
   assert.doesNotMatch(source, /futureAreas\.map[\s\S]*?<Link|futureAreas\.map[\s\S]*?<button/);
+});
+
+test("Dates is the only interactive future project area", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/page.tsx", "utf8");
+  assert.match(source, /href=\{\`\/projets\/reel\/\$\{project\.id\}\/dates\`\}/);
+  assert.match(source, /<span>Dates<\/span>/);
+});
+
+test("first real date UI keeps required fields and uses the extracted submit form", () => {
+  const page = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/page.tsx", "utf8");
+  const form = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/CreateDateForm.tsx", "utf8");
+  assert.match(page, /import \{ CreateDateForm \} from "\.\/CreateDateForm"/);
+  assert.match(page, /<CreateDateForm projectId=\{project\.id\}\/>/);
+  assert.doesNotMatch(page, /\.insert\s*\(|demo/);
+  assert.match(form, /name="date" type="date" required/);
+  assert.match(form, /name="time" type="time"/);
+  assert.match(form, /name="city"/);
+  assert.match(form, /name="venue"/);
+  assert.match(form, /<form className="date-create-form" action=\{action\}/);
+  assert.match(form, /type="submit"/);
+  assert.doesNotMatch(form, /demo/);
+});
+
+test("first real date insert is authenticated and project-bound", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  assert.match(source, /supabase\.auth\.getUser\(\)/);
+  assert.match(source, /from\("projects"\)[\s\S]*select\("id"\)[\s\S]*eq\("id", projectId\)/);
+  assert.match(source, /from\("events"\)\.insert\(\{/);
+  assert.match(source, /project_id: project\.id/);
+  assert.match(source, /created_by: authData\.user\.id/);
+  assert.match(source, /status: "draft"/);
+  assert.doesNotMatch(source, /ends_at/);
+});
+
+test("first real date preserves optional time semantics", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  assert.match(source, /const startsAt = time \? .* : null/);
+  assert.match(source, /event_date: eventDate/);
+  assert.match(source, /starts_at: startsAt/);
+});
+
+test("date form protects double submit and preserves values on error", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/CreateDateForm.tsx", "utf8");
+  assert.match(source, /disabled=\{pending\}/);
+  assert.match(source, /pending \? "Enregistrement…" : "Créer la date"/);
+  assert.match(source, /defaultValue=\{state\.values\.date\}/);
+  assert.match(source, /defaultValue=\{state\.values\.time\}/);
+});
+
+test("Dates page reads real events for the current project without demo data", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/page.tsx", "utf8");
+  assert.match(source, /from\("events"\)/);
+  assert.match(source, /\.eq\("project_id", project\.id\)/);
+  assert.match(source, /dates\.length === 0/);
+  assert.doesNotMatch(source, /demoToday|demoProjects|data\/demo/);
 });
