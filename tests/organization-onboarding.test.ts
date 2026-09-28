@@ -144,7 +144,23 @@ test("real project page is a durable project sheet using only real project data"
 
 test("future project areas are visibly non-interactive", () => {
   const source = fs.readFileSync("src/app/projets/reel/[projectId]/page.tsx", "utf8");
-  for (const area of ["Dates", "Informations", "Messages", "Équipe", "Documents"]) assert.match(source, new RegExp(area));
+  for (const area of ["Informations", "Messages", "Équipe", "Documents"]) assert.match(source, new RegExp(area));
   assert.match(source, /<small>À venir<\/small>/);
   assert.doesNotMatch(source, /futureAreas\.map[\s\S]*?<Link|futureAreas\.map[\s\S]*?<button/);
+});
+
+test("Dates is the only interactive future project area", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/page.tsx", "utf8");
+  assert.match(source, /href=\{\`\/projets\/reel\/\$\{project\.id\}\/dates\`\}/);
+  assert.match(source, /<span>Dates<\/span>/);
+});
+
+test("first real date UI is context-bound and deliberately write-free", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/page.tsx", "utf8");
+  assert.match(source, /name="date" type="date" required/);
+  assert.match(source, /name="time" type="time"/);
+  assert.match(source, /name="city"/);
+  assert.match(source, /name="venue"/);
+  assert.doesNotMatch(source, /name="project_id"|name="created_by"|name="status"|\.insert\s*\(|action=|demo/);
+  assert.match(source, /type="button" disabled/);
 });
