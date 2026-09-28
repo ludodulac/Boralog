@@ -40,9 +40,9 @@ insert into public.projects (id,organization_id,name,created_by) values
  ('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','PROJECT A1','00000000-0000-4000-8000-000000000001'),
  ('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','PROJECT A2','00000000-0000-4000-8000-000000000001');
 insert into public.project_memberships (project_id,user_id) values ('20000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000003');
-insert into public.events (id,project_id,title,created_by) values
- ('30000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','A1 EVENT','00000000-0000-4000-8000-000000000001'),
- ('30000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','A2 EVENT','00000000-0000-4000-8000-000000000001');
+insert into public.events (id,project_id,title,event_date,created_by) values
+ ('30000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','A1 EVENT','2026-09-28','00000000-0000-4000-8000-000000000001'),
+ ('30000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','A2 EVENT','2026-09-29','00000000-0000-4000-8000-000000000001');
 select pg_temp.assert_eq(count(*),2,'OWNER sees A1/A2') from public.projects where organization_id='10000000-0000-4000-8000-000000000001';
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000002',true);
@@ -105,14 +105,14 @@ do $$ declare n bigint; begin
  get diagnostics n = row_count;
  perform pg_temp.assert_eq(n,0,'LIMITED_A event DELETE A2 denied by RLS');
 end $$;
-insert into public.events (id,project_id,title,created_by) values ('30000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000001','LIMITED A1 WRITE','00000000-0000-4000-8000-000000000003');
+insert into public.events (id,project_id,title,event_date,created_by) values ('30000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000001','LIMITED A1 WRITE','2026-09-30','00000000-0000-4000-8000-000000000003');
 do $$ declare n bigint; begin
  delete from public.events where id='30000000-0000-4000-8000-000000000003';
  get diagnostics n = row_count;
  perform pg_temp.assert_eq(n,1,'LIMITED_A event DELETE A1 allowed');
 end $$;
 do $$ begin begin
- insert into public.events (project_id,title,created_by) values ('20000000-0000-4000-8000-000000000002','LIMITED A2 DENY','00000000-0000-4000-8000-000000000003');
+ insert into public.events (project_id,title,event_date,created_by) values ('20000000-0000-4000-8000-000000000002','LIMITED A2 DENY','2026-10-01','00000000-0000-4000-8000-000000000003');
  raise exception 'expected LIMITED A2 event denial';
 exception when insufficient_privilege or check_violation then null; end; end $$;
 do $$ begin begin
