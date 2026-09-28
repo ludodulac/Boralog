@@ -164,3 +164,37 @@ test("first real date UI is context-bound and deliberately write-free", () => {
   assert.doesNotMatch(source, /name="project_id"|name="created_by"|name="status"|\.insert\s*\(|action=|demo/);
   assert.match(source, /type="button" disabled/);
 });
+
+test("first real date insert is authenticated and project-bound", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  assert.match(source, /supabase\.auth\.getUser\(\)/);
+  assert.match(source, /from\("projects"\).*select\("id"\).*eq\("id", projectId\)/s);
+  assert.match(source, /from\("events"\)\.insert\(\{/);
+  assert.match(source, /project_id: project\.id/);
+  assert.match(source, /created_by: authData\.user\.id/);
+  assert.match(source, /status: "draft"/);
+  assert.doesNotMatch(source, /ends_at/);
+});
+
+test("first real date preserves optional time semantics", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  assert.match(source, /const startsAt = time \? .* : null/);
+  assert.match(source, /event_date: eventDate/);
+  assert.match(source, /starts_at: startsAt/);
+});
+
+test("date form protects double submit and preserves values on error", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/CreateDateForm.tsx", "utf8");
+  assert.match(source, /disabled=\{pending\}/);
+  assert.match(source, /pending \? "Enregistrement…" : "Créer la date"/);
+  assert.match(source, /defaultValue=\{state\.values\.date\}/);
+  assert.match(source, /defaultValue=\{state\.values\.time\}/);
+});
+
+test("Dates page reads real events for the current project without demo data", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/page.tsx", "utf8");
+  assert.match(source, /from\("events"\)/);
+  assert.match(source, /\.eq\("project_id", project\.id\)/);
+  assert.match(source, /dates\.length === 0/);
+  assert.doesNotMatch(source, /demoToday|demoProjects|data\/demo/);
+});

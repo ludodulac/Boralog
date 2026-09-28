@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "../../../../../../lib/supabase/server";
+import { CreateDateForm } from "./CreateDateForm";
 
 export default async function NewDatePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -15,13 +16,6 @@ export default async function NewDatePage({ params }: { params: Promise<{ projec
     <p className="eyebrow">PROJET · {project.name.toUpperCase()}</p>
     <h1>Créer une date</h1>
     <p>Ajoutez les informations essentielles de cette date.</p>
-    <form className="date-create-form">
-      <label htmlFor="event-date">Date <span aria-hidden="true">*</span><input id="event-date" name="date" type="date" required /></label>
-      <label htmlFor="event-time">Heure <small>Facultative</small><input id="event-time" name="time" type="time" /></label>
-      <label htmlFor="event-city">Ville <small>Facultative</small><input id="event-city" name="city" type="text" autoComplete="address-level2" /></label>
-      <label htmlFor="event-venue">Lieu <small>Facultatif</small><input id="event-venue" name="venue" type="text" autoComplete="organization" /></label>
-      <button className="date-create-submit" type="button" disabled aria-disabled="true">Créer la date</button>
-      <p className="project-create-note">L’enregistrement sera activé à l’étape suivante.</p>
-    </form>
+    <CreateDateForm projectId={project.id}/>
   </div></main>;
 }
