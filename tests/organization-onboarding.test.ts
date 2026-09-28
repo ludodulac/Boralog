@@ -65,6 +65,12 @@ test("real organization boundary does not render demo fixtures", () => {
   assert.match(shell, /identity\.organization\.name/);
 });
 
+test("calendar route renders its requested child for an existing organization", () => {
+  const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
+  assert.match(shell, /const isCalendarRoute = pathname === "\/calendrier"/);
+  assert.match(shell, /isRealProjectRoute \|\| isCalendarRoute \? children/);
+});
+
 test("no-organization UX exposes creation CTA", () => {
   const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
   assert.match(shell, /Vous n&apos;avez pas encore de structure/);
