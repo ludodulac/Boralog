@@ -173,7 +173,7 @@ test("first real date UI keeps required fields and uses the extracted submit for
 test("first real date insert is authenticated and project-bound", () => {
   const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
   assert.match(source, /supabase\.auth\.getUser\(\)/);
-  assert.match(source, /from\("projects"\).*select\("id"\).*eq\("id", projectId\)/s);
+  assert.match(source, /from\("projects"\)[\s\S]*select\("id"\)[\s\S]*eq\("id", projectId\)/);
   assert.match(source, /from\("events"\)\.insert\(\{/);
   assert.match(source, /project_id: project\.id/);
   assert.match(source, /created_by: authData\.user\.id/);
