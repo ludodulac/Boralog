@@ -164,3 +164,29 @@ test("first real date UI is context-bound and deliberately write-free", () => {
   assert.doesNotMatch(source, /name="project_id"|name="created_by"|name="status"|\.insert\s*\(|action=|demo/);
   assert.match(source, /type="button" disabled/);
 });
+
+test("real date action authenticates, resolves project, and inserts event", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/actions.ts", "utf8");
+  assert.match(source, /supabase\.auth\.getUser\(\)/);
+  assert.match(source, /from\("projects"\)\.select\("id"\)\.eq\("id", projectId\)/);
+  assert.match(source, /from\("events"\)\.insert\(\{/);
+  assert.match(source, /project_id: project\.id/);
+  assert.match(source, /created_by: authData\.user\.id/);
+  assert.match(source, /status: "draft"/);
+  assert.doesNotMatch(source, /formData\.get\(["']project_id|formData\.get\(["']created_by/);
+});
+
+test("real date form preserves values and blocks double submit", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/nouvelle/CreateDateForm.tsx", "utf8");
+  assert.match(source, /disabled=\{pending\}/);
+  assert.match(source, /pending \? "Création…" : "Créer la date"/);
+  assert.match(source, /defaultValue=\{state\.values\.date\}/);
+});
+
+test("project dates list reads only real events for current project", () => {
+  const source = fs.readFileSync("src/app/projets/reel/[projectId]/dates/page.tsx", "utf8");
+  assert.match(source, /from\("events"\)/);
+  assert.match(source, /\.eq\("project_id", project\.id\)/);
+  assert.match(source, /realDates\.length === 0/);
+  assert.doesNotMatch(source, /demo/);
+});
