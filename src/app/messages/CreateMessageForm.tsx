@@ -15,7 +15,7 @@ export function CreateMessageForm() {
       formRef.current?.reset();
       router.refresh();
     }
-  }, [router, state.status]);
+  }, [router, state]);
 
   return <form ref={formRef} className="project-create-form" action={action} aria-busy={pending}>
     <label htmlFor="message-content">Message à traiter
