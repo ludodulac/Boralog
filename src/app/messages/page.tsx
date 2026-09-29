@@ -22,16 +22,27 @@ export default async function MessagesPage() {
   if (!identity.organization) return null;
 
   const supabase = await createClient();
-  const { data: messages, error } = await supabase
-    .from("messages")
-    .select("id, content, status, created_at")
-    .eq("organization_id", identity.organization.id)
-    .order("created_at", { ascending: false });
+  const [{ data: projects, error: projectError }, { data: messages, error: messageError }] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("id, name, archived_at")
+      .eq("organization_id", identity.organization.id)
+      .order("name", { ascending: true }),
+    supabase
+      .from("messages")
+      .select("id, project_id, content, status, created_at")
+      .eq("organization_id", identity.organization.id)
+      .order("created_at", { ascending: false }),
+  ]);
 
+  const accessibleProjects = projects ?? [];
+  const selectableProjects = accessibleProjects
+    .filter((project) => project.archived_at === null)
+    .map((project) => ({ id: project.id, name: project.name }));
+  const projectNames = new Map(accessibleProjects.map((project) => [project.id, project.name]));
   const realMessages = messages ?? [];
-  const canCreateStructureMessage =
-    identity.organization.accessLevel === "owner" ||
-    identity.organization.accessLevel === "full";
+  const requiresProject = identity.organization.accessLevel === "limited";
+  const canCreateMessage = !requiresProject || (!projectError && selectableProjects.length > 0);
 
   return <main className="entity-page"><div className="entity-wrap">
     <header className="entity-header">
@@ -40,24 +51,32 @@ export default async function MessagesPage() {
       <p>Les messages entrants restent à traiter tant qu’un humain ne décide pas de la suite.</p>
     </header>
 
-    {canCreateStructureMessage && <section aria-labelledby="new-message-title">
+    <section aria-labelledby="new-message-title">
       <h2 id="new-message-title">Nouveau message</h2>
-      <CreateMessageForm />
-    </section>}
+      {canCreateMessage ? (
+        <CreateMessageForm projects={selectableProjects} requiresProject={requiresProject} />
+      ) : (
+        <p className="work-empty">Aucun projet accessible pour créer un message.</p>
+      )}
+    </section>
 
     <section aria-labelledby="message-list-title">
       <h2 id="message-list-title">Messages à traiter</h2>
-      {error ? (
+      {messageError ? (
         <p role="alert">Les messages n’ont pas pu être chargés.</p>
       ) : realMessages.length === 0 ? (
         <p className="work-empty">Aucun message pour le moment.</p>
       ) : (
         <div className="real-date-list">
-          {realMessages.map((message) => <article className="real-date-row" key={message.id}>
-            <strong>{message.content}</strong>
-            <span>{displayStatus(message.status)}</span>
-            <small>{displayCreatedAt(message.created_at)}</small>
-          </article>)}
+          {realMessages.map((message) => {
+            const projectName = message.project_id ? projectNames.get(message.project_id) : null;
+            return <article className="real-date-row" key={message.id}>
+              <strong>{message.content}</strong>
+              <span>{displayStatus(message.status)}</span>
+              {projectName && <small>{projectName}</small>}
+              <small>{displayCreatedAt(message.created_at)}</small>
+            </article>;
+          })}
         </div>
       )}
     </section>

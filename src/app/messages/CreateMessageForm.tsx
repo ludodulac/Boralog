@@ -5,7 +5,18 @@ import { useRouter } from "next/navigation";
 import { createMessage } from "./actions";
 import { initialCreateMessageState } from "./state";
 
-export function CreateMessageForm() {
+type MessageProjectOption = {
+  id: string;
+  name: string;
+};
+
+export function CreateMessageForm({
+  projects,
+  requiresProject,
+}: {
+  projects: MessageProjectOption[];
+  requiresProject: boolean;
+}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, action, pending] = useActionState(createMessage, initialCreateMessageState);
@@ -28,6 +39,20 @@ export function CreateMessageForm() {
         defaultValue={state.values.content}
       />
     </label>
+
+    <label htmlFor="message-project">Projet{requiresProject ? "" : " — facultatif"}
+      <select
+        id="message-project"
+        name="project_id"
+        required={requiresProject}
+        disabled={pending}
+        defaultValue={state.values.projectId}
+      >
+        <option value="">Aucun projet</option>
+        {projects.map((project) => <option value={project.id} key={project.id}>{project.name}</option>)}
+      </select>
+    </label>
+
     {state.status === "error" && <p className="project-create-feedback error" role="alert">{state.message}</p>}
     {state.status === "success" && <p className="project-create-feedback" role="status">{state.message}</p>}
     <button className="project-create-submit" type="submit" disabled={pending}>
