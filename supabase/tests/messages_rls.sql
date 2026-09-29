@@ -210,7 +210,7 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','12700000-0000-4000-8000-000000000001',true);
 
-do $
+do $$
 declare v_denied boolean := false;
 begin
   begin
@@ -228,10 +228,10 @@ begin
   end;
 
   insert into _boralog_messages_results values ('CONSISTENCY_GUARD', v_denied, 'denied='||v_denied);
-end $;
+end $$;
 
 
-do $
+do $$
 declare v_denied boolean := false;
 begin
   begin
@@ -248,9 +248,9 @@ begin
   end;
 
   insert into _boralog_messages_results values ('PROJECT_ORG_GUARD', v_denied, 'denied='||v_denied);
-end $;
+end $$;
 
-do $
+do $$
 declare v_id uuid; v_denied boolean := false; v_creator uuid;
 begin
   insert into public.messages(organization_id, content, created_by)
@@ -275,7 +275,7 @@ begin
     v_denied and v_creator='12700000-0000-4000-8000-000000000001'::uuid,
     'denied='||v_denied
   );
-end $;
+end $$;
 
 reset role;
 
