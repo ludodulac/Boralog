@@ -21,7 +21,8 @@ export async function createMessage(
 ): Promise<CreateMessageState> {
   const content = normalizeContent(formData.get("content"));
   const projectId = String(formData.get("project_id") ?? "").trim();
-  const values = { content, projectId };
+  const eventId = String(formData.get("event_id") ?? "").trim();
+  const values = { content, projectId, eventId };
 
   if (!content) {
     return { status: "error", message: "Écrivez le message à traiter.", values };
@@ -29,6 +30,10 @@ export async function createMessage(
 
   if (projectId && !isUuid(projectId)) {
     return { status: "error", message: "Le projet sélectionné n’est pas valide.", values };
+  }
+
+  if (eventId && !isUuid(eventId)) {
+    return { status: "error", message: "La date sélectionnée n’est pas valide.", values };
   }
 
   const supabase = await createClient();
@@ -57,15 +62,8 @@ export async function createMessage(
     };
   }
 
-  if (membership.access_level === "limited" && !projectId) {
-    return {
-      status: "error",
-      message: "Choisissez un projet accessible pour créer ce message.",
-      values,
-    };
-  }
-
   let validatedProjectId: string | null = null;
+  let validatedEventId: string | null = null;
 
   if (projectId) {
     const { data: project, error: projectError } = await supabase
@@ -87,9 +85,61 @@ export async function createMessage(
     validatedProjectId = project.id;
   }
 
+  if (eventId) {
+    const { data: selectedEvent, error: eventError } = await supabase
+      .from("events")
+      .select("id, project_id")
+      .eq("id", eventId)
+      .maybeSingle();
+
+    if (eventError || !selectedEvent) {
+      return {
+        status: "error",
+        message: "Cette date n’est pas accessible.",
+        values,
+      };
+    }
+
+    const { data: eventProject, error: eventProjectError } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", selectedEvent.project_id)
+      .eq("organization_id", membership.organization_id)
+      .is("archived_at", null)
+      .maybeSingle();
+
+    if (eventProjectError || !eventProject) {
+      return {
+        status: "error",
+        message: "Cette date n’est pas accessible dans cette structure.",
+        values,
+      };
+    }
+
+    if (validatedProjectId && validatedProjectId !== eventProject.id) {
+      return {
+        status: "error",
+        message: "La date sélectionnée n’appartient pas au projet choisi.",
+        values,
+      };
+    }
+
+    validatedProjectId = eventProject.id;
+    validatedEventId = selectedEvent.id;
+  }
+
+  if (membership.access_level === "limited" && !validatedProjectId) {
+    return {
+      status: "error",
+      message: "Choisissez un projet ou une date accessible pour créer ce message.",
+      values,
+    };
+  }
+
   const { error } = await supabase.from("messages").insert({
     organization_id: membership.organization_id,
     project_id: validatedProjectId,
+    event_id: validatedEventId,
     content,
     created_by: authData.user.id,
   });
@@ -106,6 +156,6 @@ export async function createMessage(
   return {
     status: "success",
     message: "Message enregistré.",
-    values: { content: "", projectId: "" },
+    values: { content: "", projectId: "", eventId: "" },
   };
 }
