@@ -28,6 +28,14 @@ values (
   '12700000-0000-4000-8000-000000000001'
 );
 
+insert into public.organizations(id, name, slug, created_by)
+values (
+  '12710000-0000-4000-8000-000000000002',
+  'BORALOG 127 Other Organization',
+  'boralog-127-other-organization',
+  '12700000-0000-4000-8000-000000000001'
+);
+
 insert into public.organization_memberships(
   organization_id, user_id, role, status, access_level
 ) values
@@ -37,7 +45,8 @@ insert into public.organization_memberships(
 insert into public.projects(id, organization_id, name, created_by)
 values
   ('12720000-0000-4000-8000-000000000001','12710000-0000-4000-8000-000000000001','Accessible project','12700000-0000-4000-8000-000000000001'),
-  ('12720000-0000-4000-8000-000000000002','12710000-0000-4000-8000-000000000001','Inaccessible project','12700000-0000-4000-8000-000000000001');
+  ('12720000-0000-4000-8000-000000000002','12710000-0000-4000-8000-000000000001','Inaccessible project','12700000-0000-4000-8000-000000000001'),
+  ('12720000-0000-4000-8000-000000000003','12710000-0000-4000-8000-000000000002','Other organization project','12700000-0000-4000-8000-000000000001');
 
 insert into public.project_memberships(project_id, user_id, role)
 values (
@@ -201,7 +210,7 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','12700000-0000-4000-8000-000000000001',true);
 
-do $$
+do $
 declare v_denied boolean := false;
 begin
   begin
@@ -219,7 +228,54 @@ begin
   end;
 
   insert into _boralog_messages_results values ('CONSISTENCY_GUARD', v_denied, 'denied='||v_denied);
-end $$;
+end $;
+
+
+do $
+declare v_denied boolean := false;
+begin
+  begin
+    insert into public.messages(
+      organization_id, project_id, content, created_by
+    ) values (
+      '12710000-0000-4000-8000-000000000001',
+      '12720000-0000-4000-8000-000000000003',
+      'cross-organization project',
+      auth.uid()
+    );
+  exception when check_violation then
+    v_denied := true;
+  end;
+
+  insert into _boralog_messages_results values ('PROJECT_ORG_GUARD', v_denied, 'denied='||v_denied);
+end $;
+
+do $
+declare v_id uuid; v_denied boolean := false; v_creator uuid;
+begin
+  insert into public.messages(organization_id, content, created_by)
+  values (
+    '12710000-0000-4000-8000-000000000001',
+    'immutable provenance',
+    auth.uid()
+  )
+  returning id into v_id;
+
+  begin
+    update public.messages
+       set created_by='12700000-0000-4000-8000-000000000002'
+     where id=v_id;
+  exception when check_violation then
+    v_denied := true;
+  end;
+
+  select created_by into v_creator from public.messages where id=v_id;
+  insert into _boralog_messages_results values (
+    'PROVENANCE_IMMUTABLE',
+    v_denied and v_creator='12700000-0000-4000-8000-000000000001'::uuid,
+    'denied='||v_denied
+  );
+end $;
 
 reset role;
 
