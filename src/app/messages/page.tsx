@@ -10,6 +10,11 @@ function displayCreatedAt(value: string) {
   }).format(new Date(value));
 }
 
+function displayDate(value: string) {
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
 function displayStatus(value: string) {
   if (value === "TO_PROCESS") return "À traiter";
   if (value === "PROCESSED") return "Traité";
@@ -30,16 +35,42 @@ export default async function MessagesPage() {
       .order("name", { ascending: true }),
     supabase
       .from("messages")
-      .select("id, project_id, content, status, created_at")
+      .select("id, project_id, event_id, content, status, created_at")
       .eq("organization_id", identity.organization.id)
       .order("created_at", { ascending: false }),
   ]);
 
   const accessibleProjects = projects ?? [];
+  const accessibleProjectIds = accessibleProjects.map((project) => project.id);
+  const projectNames = new Map(accessibleProjects.map((project) => [project.id, project.name]));
   const selectableProjects = accessibleProjects
     .filter((project) => project.archived_at === null)
     .map((project) => ({ id: project.id, name: project.name }));
-  const projectNames = new Map(accessibleProjects.map((project) => [project.id, project.name]));
+  const selectableProjectIds = new Set(selectableProjects.map((project) => project.id));
+
+  const eventResult = accessibleProjectIds.length === 0
+    ? { data: [], error: null }
+    : await supabase
+        .from("events")
+        .select("id, project_id, event_date, starts_at, city, venue_name")
+        .in("project_id", accessibleProjectIds)
+        .order("event_date", { ascending: true })
+        .order("starts_at", { ascending: true, nullsFirst: true });
+
+  const accessibleEvents = eventResult.data ?? [];
+  const eventContexts = new Map(accessibleEvents.map((event) => [event.id, event]));
+  const selectableEvents = accessibleEvents
+    .filter((event) => selectableProjectIds.has(event.project_id))
+    .map((event) => ({
+      id: event.id,
+      projectId: event.project_id,
+      projectName: projectNames.get(event.project_id) ?? "Projet",
+      eventDate: event.event_date,
+      startsAt: event.starts_at,
+      city: event.city,
+      venueName: event.venue_name,
+    }));
+
   const realMessages = messages ?? [];
   const requiresProject = identity.organization.accessLevel === "limited";
   const canCreateMessage = !requiresProject || (!projectError && selectableProjects.length > 0);
@@ -54,7 +85,7 @@ export default async function MessagesPage() {
     <section aria-labelledby="new-message-title">
       <h2 id="new-message-title">Nouveau message</h2>
       {canCreateMessage ? (
-        <CreateMessageForm projects={selectableProjects} requiresProject={requiresProject} />
+        <CreateMessageForm projects={selectableProjects} events={selectableEvents} />
       ) : (
         <p className="work-empty">Aucun projet accessible pour créer un message.</p>
       )}
@@ -69,11 +100,21 @@ export default async function MessagesPage() {
       ) : (
         <div className="real-date-list">
           {realMessages.map((message) => {
-            const projectName = message.project_id ? projectNames.get(message.project_id) : null;
+            const event = message.event_id ? eventContexts.get(message.event_id) : null;
+            const projectName = message.project_id
+              ? projectNames.get(message.project_id)
+              : event
+                ? projectNames.get(event.project_id)
+                : null;
+            const dateContext = event
+              ? [displayDate(event.event_date), event.city, event.venue_name].filter(Boolean).join(" · ")
+              : null;
+
             return <article className="real-date-row" key={message.id}>
               <strong>{message.content}</strong>
               <span>{displayStatus(message.status)}</span>
               {projectName && <small>{projectName}</small>}
+              {dateContext && <small>{dateContext}</small>}
               <small>{displayCreatedAt(message.created_at)}</small>
             </article>;
           })}
