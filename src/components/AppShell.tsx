@@ -22,6 +22,7 @@ export function AppShell({ children, identity }: { children: React.ReactNode; id
   const isProjectCreationRoute = pathname === "/projets/nouveau";
   const isRealProjectRoute = pathname.startsWith("/projets/reel/");
   const isCalendarRoute = pathname === "/calendrier";
+  const isMessagesRoute = pathname === "/messages";
   const showRequestedContent = pathname === "/moi" || isOnboardingRoute;
   const organizationName = identity.organization?.name ?? "Aucune structure";
 
@@ -37,7 +38,7 @@ export function AppShell({ children, identity }: { children: React.ReactNode; id
           <Link className="empty-membership-cta" href="/organisations/nouvelle">Créer une structure</Link>
         </div></main>
       ) : (
-        pathname === "/" || pathname === "/moi" || isProjectCreationRoute || isRealProjectRoute || isCalendarRoute ? children : <main className="real-empty-page"><div className="real-empty-card">
+        pathname === "/" || pathname === "/moi" || isProjectCreationRoute || isRealProjectRoute || isCalendarRoute || isMessagesRoute ? children : <main className="real-empty-page"><div className="real-empty-card">
           <p className="eyebrow">STRUCTURE</p>
           <h1>{identity.organization.name}</h1>
           <p>Votre structure est prête.</p>
