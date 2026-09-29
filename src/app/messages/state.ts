@@ -1,4 +1,4 @@
-export type CreateMessageValues = { content: string };
+export type CreateMessageValues = { content: string; projectId: string };
 
 export type CreateMessageState =
   | { status: "idle"; message: ""; values: CreateMessageValues }
@@ -8,5 +8,5 @@ export type CreateMessageState =
 export const initialCreateMessageState: CreateMessageState = {
   status: "idle",
   message: "",
-  values: { content: "" },
+  values: { content: "", projectId: "" },
 };
