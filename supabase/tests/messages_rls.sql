@@ -80,7 +80,7 @@ begin
   )
   returning id into v_id;
 
-  update public.messages set status='PROCESSED' where id=v_id;
+  perform public.boralog_close_message_no_follow_up(v_id);
   select status into v_status from public.messages where id=v_id;
 
   insert into _boralog_messages_results values ('OWNER', v_status='PROCESSED', coalesce(v_status,'missing'));
@@ -103,7 +103,7 @@ begin
   )
   returning id into v_id;
 
-  update public.messages set status='PROCESSED' where id=v_id;
+  perform public.boralog_close_message_no_follow_up(v_id);
   select status into v_status from public.messages where id=v_id;
 
   insert into _boralog_messages_results values ('FULL', v_status='PROCESSED', coalesce(v_status,'missing'));
@@ -127,7 +127,7 @@ begin
   )
   returning id into v_id;
 
-  update public.messages set status='PROCESSED' where id=v_id;
+  perform public.boralog_close_message_no_follow_up(v_id);
   select status into v_status from public.messages where id=v_id;
 
   insert into _boralog_messages_results values ('LIMITED_PROJECT', v_status='PROCESSED', coalesce(v_status,'missing'));
