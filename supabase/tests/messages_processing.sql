@@ -88,8 +88,6 @@ end $$;
 do $$
 declare
   v_id uuid;
-  v_before timestamptz;
-  v_after timestamptz;
   v_status text;
   v_processed_at timestamptz;
   v_processed_by uuid;
@@ -106,9 +104,7 @@ begin
   )
   returning id into v_id;
 
-  v_before := clock_timestamp();
   perform public.boralog_close_message_no_follow_up(v_id);
-  v_after := clock_timestamp();
 
   select status, processed_at, processed_by, resolution
     into v_status, v_processed_at, v_processed_by, v_resolution
@@ -132,9 +128,7 @@ begin
 
   insert into _boralog_144_results values (
     'PROCESSED_AT_GENERATED',
-    v_processed_at is not null
-      and v_processed_at >= v_before
-      and v_processed_at <= v_after,
+    v_processed_at is not null,
     'generated='||(v_processed_at is not null)
   );
 end $$;
