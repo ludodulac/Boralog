@@ -92,6 +92,8 @@ export async function createMessage(
     project_id: validatedProjectId,
     content,
     created_by: authData.user.id,
+    origin_type: "INTERNAL",
+    author_user_id: authData.user.id,
   });
 
   if (error) {
