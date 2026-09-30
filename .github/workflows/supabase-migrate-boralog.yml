@@ -98,6 +98,47 @@ jobs:
           set -euo pipefail
           supabase link --project-ref "${EXPECTED_PROJECT_REF}"
 
+      - name: Ensure IPv4 Supavisor metadata for GitHub Actions
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          pooler_file="supabase/.temp/pooler-url"
+
+          if [ -s "${pooler_file}" ]; then
+            echo "IPv4 pooler metadata already available from supabase link."
+            exit 0
+          fi
+
+          response_file="${RUNNER_TEMP}/boralog-pooler-config.json"
+
+          curl --fail --silent --show-error \
+            --request GET \
+            --header "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+            "https://api.supabase.com/v1/projects/${EXPECTED_PROJECT_REF}/config/database/pooler" \
+            --output "${response_file}"
+
+          pooler_url="$(jq -er '
+            [ .[] | select(.database_type == "PRIMARY") | .connection_string ]
+            | if length == 1 then .[0] else error("expected exactly one PRIMARY pooler") end
+          ' "${response_file}")"
+
+          pooler_url="${pooler_url/:[YOUR-PASSWORD]@/@}"
+          pooler_url="${pooler_url/:6543\//:5432\/}"
+
+          if [ -z "${pooler_url}" ]; then
+            echo "::error::Supabase Management API returned no usable PRIMARY pooler connection."
+            exit 1
+          fi
+
+          mkdir -p "$(dirname "${pooler_file}")"
+          printf '%s\n' "${pooler_url}" > "${pooler_file}"
+          chmod 600 "${pooler_file}"
+
+          echo "IPv4 pooler metadata prepared for linked CLI commands."
+
       - name: Compare local and remote migration history
         shell: bash
         env:
