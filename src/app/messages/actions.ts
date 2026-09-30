@@ -15,6 +15,13 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+function isMissingProvenanceColumnError(error: { code?: string; message?: string } | null) {
+  if (error?.code !== "PGRST204") return false;
+
+  const message = error.message ?? "";
+  return message.includes("origin_type") || message.includes("author_user_id");
+}
+
 export async function createMessage(
   _previousState: CreateMessageState = initialCreateMessageState,
   formData: FormData
@@ -87,12 +94,25 @@ export async function createMessage(
     validatedProjectId = project.id;
   }
 
-  const { error } = await supabase.from("messages").insert({
+  const messageInsert = {
     organization_id: membership.organization_id,
     project_id: validatedProjectId,
     content,
     created_by: authData.user.id,
+  };
+
+  const { error: provenanceInsertError } = await supabase.from("messages").insert({
+    ...messageInsert,
+    origin_type: "INTERNAL",
+    author_user_id: authData.user.id,
   });
+
+  let error = provenanceInsertError;
+
+  if (isMissingProvenanceColumnError(provenanceInsertError)) {
+    const { error: legacyInsertError } = await supabase.from("messages").insert(messageInsert);
+    error = legacyInsertError;
+  }
 
   if (error) {
     return {

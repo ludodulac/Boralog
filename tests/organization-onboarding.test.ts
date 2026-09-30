@@ -65,10 +65,11 @@ test("real organization boundary does not render demo fixtures", () => {
   assert.match(shell, /identity\.organization\.name/);
 });
 
-test("calendar route renders its requested child for an existing organization", () => {
+test("calendar and Messages routes render their requested child for an existing organization", () => {
   const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
   assert.match(shell, /const isCalendarRoute = pathname === "\/calendrier"/);
-  assert.match(shell, /isRealProjectRoute \|\| isCalendarRoute \? children/);
+  assert.match(shell, /const isMessagesRoute = pathname === "\/messages"/);
+  assert.match(shell, /isProjectCreationRoute \|\| isRealProjectRoute \|\| isCalendarRoute \|\| isMessagesRoute \? children/);
 });
 
 test("no-organization UX exposes creation CTA", () => {
@@ -83,12 +84,17 @@ test("real organization empty state exposes first project CTA", () => {
   assert.match(shell, /Créer un projet/);
 });
 
-test("project creation UI slice is deliberately write-free", () => {
-  const source = fs.readFileSync("src/app/projets/nouveau/page.tsx", "utf8");
-  assert.match(source, /name="name"/);
-  assert.match(source, /name="description"/);
-  assert.match(source, /type="button" disabled/);
-  assert.doesNotMatch(source, /supabase|\.insert\s*\(|action=|useActionState/);
+test("project creation UI slice is extracted and deliberately write-free", () => {
+  const page = fs.readFileSync("src/app/projets/nouveau/page.tsx", "utf8");
+  const form = fs.readFileSync("src/app/projets/nouveau/CreateProjectForm.tsx", "utf8");
+  assert.match(page, /import \{ CreateProjectForm \} from "\.\/CreateProjectForm"/);
+  assert.match(page, /<CreateProjectForm attemptId=\{randomUUID\(\)\}\/>/);
+  assert.doesNotMatch(page, /supabase|\.insert\s*\(/);
+  assert.match(form, /name="name"/);
+  assert.match(form, /name="description"/);
+  assert.match(form, /type="submit" disabled=\{pending\}/);
+  assert.match(form, /useActionState\(createProject, initialCreateProjectState\)/);
+  assert.doesNotMatch(form, /supabase|\.insert\s*\(/);
 });
 
 test("project create action resolves auth and organization server-side", () => {
@@ -208,4 +214,20 @@ test("Dates page reads real events for the current project without demo data", (
   assert.match(source, /\.eq\("project_id", project\.id\)/);
   assert.match(source, /dates\.length === 0/);
   assert.doesNotMatch(source, /demoToday|demoProjects|data\/demo/);
+});
+
+
+test("Message writer sends INTERNAL provenance on the primary insert", () => {
+  const source = fs.readFileSync("src/app/messages/actions.ts", "utf8");
+  assert.match(source, /origin_type:\s*"INTERNAL"/);
+  assert.match(source, /author_user_id:\s*authData\.user\.id/);
+  assert.match(source, /created_by:\s*authData\.user\.id/);
+});
+
+test("temporary Message provenance bridge is limited to missing 155 PostgREST columns", () => {
+  const source = fs.readFileSync("src/app/messages/actions.ts", "utf8");
+  assert.match(source, /if \(error\?\.code !== "PGRST204"\) return false/);
+  assert.match(source, /message\.includes\("origin_type"\) \|\| message\.includes\("author_user_id"\)/);
+  assert.match(source, /if \(isMissingProvenanceColumnError\(provenanceInsertError\)\) \{[\s\S]*?insert\(messageInsert\)/);
+  assert.doesNotMatch(source, /PGRST204[\s\S]*?RLS|PGRST204[\s\S]*?network/i);
 });

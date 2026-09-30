@@ -64,12 +64,14 @@ declare
   v_resolution text;
 begin
   insert into public.messages(
-    organization_id, project_id, event_id, content, created_by
+    organization_id, project_id, event_id, content, created_by, origin_type, author_user_id
   ) values (
     '14410000-0000-4000-8000-000000000001',
     '14420000-0000-4000-8000-000000000001',
     '14430000-0000-4000-8000-000000000001',
     'coherent to process',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id, status, processed_at, processed_by, resolution
@@ -94,12 +96,14 @@ declare
   v_resolution text;
 begin
   insert into public.messages(
-    organization_id, project_id, event_id, content, created_by
+    organization_id, project_id, event_id, content, created_by, origin_type, author_user_id
   ) values (
     '14410000-0000-4000-8000-000000000001',
     '14420000-0000-4000-8000-000000000001',
     '14430000-0000-4000-8000-000000000001',
     'close no follow up',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -140,10 +144,12 @@ declare
   v_status text;
   v_processed_by uuid;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'forged metadata source',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -176,10 +182,12 @@ declare
   v_denied boolean := false;
   v_content text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'immutable original content',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -211,12 +219,14 @@ declare
   v_event_id uuid;
 begin
   insert into public.messages(
-    organization_id, project_id, event_id, content, created_by
+    organization_id, project_id, event_id, content, created_by, origin_type, author_user_id
   ) values (
     '14410000-0000-4000-8000-000000000001',
     '14420000-0000-4000-8000-000000000001',
     '14430000-0000-4000-8000-000000000001',
     'processed context immutable',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -251,10 +261,12 @@ declare
   v_denied boolean := false;
   v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'direct reopen denied',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -289,10 +301,12 @@ declare
   v_denied boolean := false;
   v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'processed without resolution denied',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -325,10 +339,12 @@ declare
   v_id uuid;
   v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'full can close org message',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -357,11 +373,13 @@ declare
   v_actor uuid;
 begin
   insert into public.messages(
-    organization_id, project_id, content, created_by
+    organization_id, project_id, content, created_by, origin_type, author_user_id
   ) values (
     '14410000-0000-4000-8000-000000000001',
     '14420000-0000-4000-8000-000000000001',
     'limited accessible processing',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -385,13 +403,15 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','14400000-0000-4000-8000-000000000001',true);
 
 insert into public.messages(
-  id, organization_id, project_id, content, created_by
+  id, organization_id, project_id, content, created_by, origin_type, author_user_id
 ) values (
   '14440000-0000-4000-8000-000000000001',
   '14410000-0000-4000-8000-000000000001',
   '14420000-0000-4000-8000-000000000002',
   'limited must not access',
-  auth.uid()
+  auth.uid(),
+    'INTERNAL',
+    auth.uid()
 );
 
 reset role;

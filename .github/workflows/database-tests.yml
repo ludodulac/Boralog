@@ -1,0 +1,64 @@
+name: Database tests
+
+on:
+  pull_request:
+    branches:
+      - build/foundation-v001
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  database-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: boralog_test
+        options: >-
+          --health-cmd "pg_isready -U postgres -d boralog_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify PostgreSQL health
+        run: >-
+          docker exec "${{ job.services.postgres.id }}"
+          pg_isready -U postgres -d boralog_test
+
+      - name: Bootstrap minimal Supabase SQL primitives
+        run: >-
+          docker exec -i "${{ job.services.postgres.id }}"
+          psql -U postgres -d boralog_test -v ON_ERROR_STOP=1
+          < supabase/tests/bootstrap_supabase_primitives.sql
+
+      - name: Apply Boralog migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260923233620_foundation_identity_organizations_projects.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260923233638_foundation_policy_and_index_hardening.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260925063848_profile_foundation_auth_user_trigger.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260925213621_access_model_owner_full_limited.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260928122045_event_date_optional_time.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260929093109_messages_db_foundation_127.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260929172527_message_processing_db_foundation_144.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260930095713_message_communication_provenance_155.sql
+
+      - name: Run Boralog SQL tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/messages_communication_provenance.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/messages_processing.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/messages_rls.sql
