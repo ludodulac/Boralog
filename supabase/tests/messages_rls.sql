@@ -72,7 +72,7 @@ select set_config('request.jwt.claim.sub','12700000-0000-4000-8000-000000000001'
 do $$
 declare v_id uuid; v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '12710000-0000-4000-8000-000000000001',
     'owner org-only',
@@ -95,7 +95,7 @@ select set_config('request.jwt.claim.sub','12700000-0000-4000-8000-000000000002'
 do $$
 declare v_id uuid; v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '12710000-0000-4000-8000-000000000001',
     'full org-only',
@@ -118,7 +118,7 @@ select set_config('request.jwt.claim.sub','12700000-0000-4000-8000-000000000003'
 do $$
 declare v_id uuid; v_status text;
 begin
-  insert into public.messages(organization_id, project_id, content, created_by)
+  insert into public.messages(organization_id, project_id, content, created_by, origin_type, author_user_id)
   values (
     '12710000-0000-4000-8000-000000000001',
     '12720000-0000-4000-8000-000000000001',
@@ -143,7 +143,7 @@ begin
   where project_id is null and event_id is null;
 
   begin
-    insert into public.messages(organization_id, content, created_by)
+    insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
     values (
       '12710000-0000-4000-8000-000000000001',
       'limited forbidden org-only',
@@ -163,7 +163,7 @@ end $$;
 do $$
 declare v_id uuid; v_seen bigint;
 begin
-  insert into public.messages(organization_id, event_id, content, created_by)
+  insert into public.messages(organization_id, event_id, content, created_by, origin_type, author_user_id)
   values (
     '12710000-0000-4000-8000-000000000001',
     '12730000-0000-4000-8000-000000000001',
@@ -181,7 +181,7 @@ end $$;
 do $$
 declare v_id uuid; v_denied boolean := false; v_project uuid;
 begin
-  insert into public.messages(organization_id, project_id, content, created_by)
+  insert into public.messages(organization_id, project_id, content, created_by, origin_type, author_user_id)
   values (
     '12710000-0000-4000-8000-000000000001',
     '12720000-0000-4000-8000-000000000001',
@@ -253,7 +253,7 @@ end $$;
 do $$
 declare v_id uuid; v_denied boolean := false; v_creator uuid;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '12710000-0000-4000-8000-000000000001',
     'immutable provenance',
