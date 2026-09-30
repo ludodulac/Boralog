@@ -21,15 +21,15 @@ concurrency:
 
 jobs:
   migrate:
-    name: "\${{ inputs.mode }} — Boralog only"
+    name: "${{ inputs.mode }} — Boralog only"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       EXPECTED_PROJECT_REF: jwtawyeuyvqjikjvfhri
       EXPECTED_MIGRATION_VERSION: "20260930095713"
       EXPECTED_MIGRATION_FILE: supabase/migrations/20260930095713_message_communication_provenance_155.sql
-      SUPABASE_ACCESS_TOKEN: \${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: \${{ secrets.BORALOG_DB_PASSWORD }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
 
     steps:
       - name: Check out repository
@@ -47,22 +47,22 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "EXPECTED_PROJECT_REF=\${EXPECTED_PROJECT_REF}"
-          echo "MODE=\${{ inputs.mode }}"
+          echo "EXPECTED_PROJECT_REF=${EXPECTED_PROJECT_REF}"
+          echo "MODE=${{ inputs.mode }}"
 
-          test "\${EXPECTED_PROJECT_REF}" = "jwtawyeuyvqjikjvfhri"
-          test "\${EXPECTED_MIGRATION_VERSION}" = "20260930095713"
-          test "\${EXPECTED_MIGRATION_FILE}" = "supabase/migrations/20260930095713_message_communication_provenance_155.sql"
-          test -f "\${EXPECTED_MIGRATION_FILE}"
+          test "${EXPECTED_PROJECT_REF}" = "jwtawyeuyvqjikjvfhri"
+          test "${EXPECTED_MIGRATION_VERSION}" = "20260930095713"
+          test "${EXPECTED_MIGRATION_FILE}" = "supabase/migrations/20260930095713_message_communication_provenance_155.sql"
+          test -f "${EXPECTED_MIGRATION_FILE}"
 
-          matching_files="$(find supabase/migrations -maxdepth 1 -type f -name "\${EXPECTED_MIGRATION_VERSION}_*.sql" -print)"
-          matching_count="$(printf '%s\n' "\${matching_files}" | sed '/^$/d' | wc -l | tr -d ' ')"
-          if [ "\${matching_count}" != "1" ] || [ "\${matching_files}" != "\${EXPECTED_MIGRATION_FILE}" ]; then
-            echo "::error::Expected exactly one \${EXPECTED_MIGRATION_VERSION} migration file."
+          matching_files="$(find supabase/migrations -maxdepth 1 -type f -name "${EXPECTED_MIGRATION_VERSION}_*.sql" -print)"
+          matching_count="$(printf '%s\n' "${matching_files}" | sed '/^$/d' | wc -l | tr -d ' ')"
+          if [ "${matching_count}" != "1" ] || [ "${matching_files}" != "${EXPECTED_MIGRATION_FILE}" ]; then
+            echo "::error::Expected exactly one ${EXPECTED_MIGRATION_VERSION} migration file."
             exit 1
           fi
 
-          if [ -z "\${SUPABASE_ACCESS_TOKEN:-}" ] || [ -z "\${SUPABASE_DB_PASSWORD:-}" ]; then
+          if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ] || [ -z "${SUPABASE_DB_PASSWORD:-}" ]; then
             echo "::error::Required GitHub Actions repository secrets are unavailable."
             exit 1
           fi
@@ -71,26 +71,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase link --project-ref "\${EXPECTED_PROJECT_REF}"
+          supabase link --project-ref "${EXPECTED_PROJECT_REF}"
 
       - name: Compare local and remote migration history
         shell: bash
         run: |
           set -euo pipefail
-          output_file="\${RUNNER_TEMP}/boralog-migration-list.txt"
+          output_file="${RUNNER_TEMP}/boralog-migration-list.txt"
 
           set +e
-          supabase migration list 2>&1 | tee "\${output_file}"
-          list_status="\${PIPESTATUS[0]}"
+          supabase migration list 2>&1 | tee "${output_file}"
+          list_status="${PIPESTATUS[0]}"
           set -e
 
-          if [ "\${list_status}" -ne 0 ]; then
-            if grep -Eiq 'migration.*(repair|history|remote|local)|remote.*migration|migration.*not found' "\${output_file}"; then
+          if [ "${list_status}" -ne 0 ]; then
+            if grep -Eiq 'migration.*(repair|history|remote|local)|remote.*migration|migration.*not found' "${output_file}"; then
               echo "::error title=REMOTE_LOCAL_HISTORY_MISMATCH::Supabase CLI detected incompatible local/remote migration history. This workflow never repairs history."
             else
               echo "::error::Supabase migration list failed."
             fi
-            exit "\${list_status}"
+            exit "${list_status}"
           fi
 
       - name: Dry-run and enforce migration 155 only
@@ -98,48 +98,48 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          output_file="\${RUNNER_TEMP}/boralog-db-push-dry-run.txt"
+          output_file="${RUNNER_TEMP}/boralog-db-push-dry-run.txt"
 
           set +e
-          supabase db push --dry-run 2>&1 | tee "\${output_file}"
-          push_status="\${PIPESTATUS[0]}"
+          supabase db push --dry-run 2>&1 | tee "${output_file}"
+          push_status="${PIPESTATUS[0]}"
           set -e
 
-          if [ "\${push_status}" -ne 0 ]; then
-            if grep -Eiq 'migration.*(repair|history|remote|local)|remote.*migration|migration.*not found' "\${output_file}"; then
+          if [ "${push_status}" -ne 0 ]; then
+            if grep -Eiq 'migration.*(repair|history|remote|local)|remote.*migration|migration.*not found' "${output_file}"; then
               echo "::error title=REMOTE_LOCAL_HISTORY_MISMATCH::Supabase CLI refused the dry-run because local and remote migration history differ. No repair is permitted by this workflow."
             else
               echo "::error::Supabase db push --dry-run failed. No migration was applied."
             fi
-            exit "\${push_status}"
+            exit "${push_status}"
           fi
 
-          mapfile -t proposed_versions < <(grep -Eo '[0-9]{14}' "\${output_file}" | sort -u)
+          mapfile -t proposed_versions < <(grep -Eo '[0-9]{14}' "${output_file}" | sort -u)
 
-          if [ "\${#proposed_versions[@]}" -ne 1 ] || [ "\${proposed_versions[0]}" != "\${EXPECTED_MIGRATION_VERSION}" ]; then
-            echo "::error::Dry-run did not identify exactly one pending migration version: \${EXPECTED_MIGRATION_VERSION}. No migration was applied."
-            printf 'Detected pending/version tokens: %s\n' "\${proposed_versions[*]:-none}"
+          if [ "${#proposed_versions[@]}" -ne 1 ] || [ "${proposed_versions[0]}" != "${EXPECTED_MIGRATION_VERSION}" ]; then
+            echo "::error::Dry-run did not identify exactly one pending migration version: ${EXPECTED_MIGRATION_VERSION}. No migration was applied."
+            printf 'Detected pending/version tokens: %s\n' "${proposed_versions[*]:-none}"
             exit 1
           fi
 
-          echo "Dry-run gate PASS: only \${EXPECTED_MIGRATION_VERSION} is eligible."
+          echo "Dry-run gate PASS: only ${EXPECTED_MIGRATION_VERSION} is eligible."
 
       - name: Apply migration after same-job dry-run gate
-        if: \${{ inputs.mode == 'apply' }}
+        if: ${{ inputs.mode == 'apply' }}
         shell: bash
         run: |
           set -euo pipefail
           supabase db push
 
       - name: Verify migration history after apply
-        if: \${{ inputs.mode == 'apply' }}
+        if: ${{ inputs.mode == 'apply' }}
         shell: bash
         run: |
           set -euo pipefail
-          output_file="\${RUNNER_TEMP}/boralog-migration-list-after-apply.txt"
-          supabase migration list | tee "\${output_file}"
+          output_file="${RUNNER_TEMP}/boralog-migration-list-after-apply.txt"
+          supabase migration list | tee "${output_file}"
 
-          if ! grep -Fq "\${EXPECTED_MIGRATION_VERSION}" "\${output_file}"; then
-            echo "::error::Expected migration \${EXPECTED_MIGRATION_VERSION} is absent after db push."
+          if ! grep -Fq "${EXPECTED_MIGRATION_VERSION}" "${output_file}"; then
+            echo "::error::Expected migration ${EXPECTED_MIGRATION_VERSION} is absent after db push."
             exit 1
           fi
