@@ -76,6 +76,8 @@ begin
   values (
     '12710000-0000-4000-8000-000000000001',
     'owner org-only',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -99,6 +101,8 @@ begin
   values (
     '12710000-0000-4000-8000-000000000001',
     'full org-only',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -123,6 +127,8 @@ begin
     '12710000-0000-4000-8000-000000000001',
     '12720000-0000-4000-8000-000000000001',
     'limited project',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -147,7 +153,9 @@ begin
     values (
       '12710000-0000-4000-8000-000000000001',
       'limited forbidden org-only',
-      auth.uid()
+      auth.uid(),
+    'INTERNAL',
+    auth.uid()
     );
   exception when others then
     v_denied := true;
@@ -168,6 +176,8 @@ begin
     '12710000-0000-4000-8000-000000000001',
     '12730000-0000-4000-8000-000000000001',
     'limited event-only',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -186,6 +196,8 @@ begin
     '12710000-0000-4000-8000-000000000001',
     '12720000-0000-4000-8000-000000000001',
     'limited update escape source',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
@@ -215,13 +227,15 @@ declare v_denied boolean := false;
 begin
   begin
     insert into public.messages(
-      organization_id, project_id, event_id, content, created_by
+      organization_id, project_id, event_id, content, created_by, origin_type, author_user_id
     ) values (
       '12710000-0000-4000-8000-000000000001',
       '12720000-0000-4000-8000-000000000002',
       '12730000-0000-4000-8000-000000000001',
       'inconsistent project/event',
-      auth.uid()
+      auth.uid(),
+    'INTERNAL',
+    auth.uid()
     );
   exception when check_violation then
     v_denied := true;
@@ -236,12 +250,14 @@ declare v_denied boolean := false;
 begin
   begin
     insert into public.messages(
-      organization_id, project_id, content, created_by
+      organization_id, project_id, content, created_by, origin_type, author_user_id
     ) values (
       '12710000-0000-4000-8000-000000000001',
       '12720000-0000-4000-8000-000000000003',
       'cross-organization project',
-      auth.uid()
+      auth.uid(),
+    'INTERNAL',
+    auth.uid()
     );
   exception when check_violation then
     v_denied := true;
@@ -257,6 +273,8 @@ begin
   values (
     '12710000-0000-4000-8000-000000000001',
     'immutable provenance',
+    auth.uid(),
+    'INTERNAL',
     auth.uid()
   )
   returning id into v_id;
