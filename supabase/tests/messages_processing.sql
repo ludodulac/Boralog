@@ -140,7 +140,7 @@ declare
   v_status text;
   v_processed_by uuid;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'forged metadata source',
@@ -176,7 +176,7 @@ declare
   v_denied boolean := false;
   v_content text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'immutable original content',
@@ -251,7 +251,7 @@ declare
   v_denied boolean := false;
   v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'direct reopen denied',
@@ -289,7 +289,7 @@ declare
   v_denied boolean := false;
   v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'processed without resolution denied',
@@ -325,7 +325,7 @@ declare
   v_id uuid;
   v_status text;
 begin
-  insert into public.messages(organization_id, content, created_by)
+  insert into public.messages(organization_id, content, created_by, origin_type, author_user_id)
   values (
     '14410000-0000-4000-8000-000000000001',
     'full can close org message',
