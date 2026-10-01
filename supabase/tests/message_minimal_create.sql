@@ -268,11 +268,10 @@ begin
   );
 end $$;
 
-do $$
+do $
 declare
   v_denied boolean := false;
   v_message_rows bigint;
-  v_recipient_rows bigint;
 begin
   begin
     perform public.boralog_create_internal_message(
@@ -288,21 +287,19 @@ begin
     v_denied := true;
   end;
 
+  -- message_recipients deliberately has no authenticated SELECT privilege.
+  -- A missing Message proves no durable partial Message exists; recipient rows
+  -- cannot survive independently because their FK targets messages(id).
   select count(*) into v_message_rows
   from public.messages
   where content='atomic mixed recipients';
 
-  select count(*) into v_recipient_rows
-  from public.message_recipients as mr
-  join public.messages as m on m.id=mr.message_id
-  where m.content='atomic mixed recipients';
-
   insert into _boralog_161_results values (
     'ATOMICITY_PASS',
-    v_denied and v_message_rows=0 and v_recipient_rows=0,
-    'denied='||v_denied||', messages='||v_message_rows||', recipients='||v_recipient_rows
+    v_denied and v_message_rows=0,
+    'denied='||v_denied||', messages='||v_message_rows
   );
-end $$;
+end $;
 
 do $$
 declare
