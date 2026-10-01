@@ -15,9 +15,11 @@ type MessageVisibility = "ORGANIZATION" | "RESTRICTED";
 export function CreateMessageForm({
   recipients,
   canCreateOrganization,
+  canCreateRestricted,
 }: {
   recipients: MessageRecipientOption[];
   canCreateOrganization: boolean;
+  canCreateRestricted: boolean;
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -68,7 +70,7 @@ export function CreateMessageForm({
           value="RESTRICTED"
           checked={visibility === "RESTRICTED"}
           onChange={() => setVisibility("RESTRICTED")}
-          disabled={pending}
+          disabled={pending || !canCreateRestricted}
         />
         <span>Personnes choisies</span>
       </label>
