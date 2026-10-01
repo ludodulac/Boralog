@@ -45,7 +45,10 @@ export default async function MessagesPage() {
   const accessibleProjects = projects ?? [];
   const projectNames = new Map(accessibleProjects.map((project) => [project.id, project.name]));
   const realMessages = messages ?? [];
-  const recipients = (recipientDirectory ?? []).map((recipient) => ({
+  const recipients = (recipientDirectory ?? []).map((recipient: {
+    user_id: string;
+    display_name: string | null;
+  }) => ({
     user_id: recipient.user_id,
     display_name: recipient.display_name,
   }));
