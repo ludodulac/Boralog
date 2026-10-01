@@ -11,6 +11,28 @@ create temporary table _boralog_161_results (
 
 grant select, insert, update on _boralog_161_results to authenticated;
 
+create or replace function private._boralog_161_test_recipient_count(
+  p_message_id uuid,
+  p_user_id uuid default null
+)
+returns bigint
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select count(*)
+  from public.message_recipients as mr
+  where mr.message_id = p_message_id
+    and (p_user_id is null or mr.user_id = p_user_id)
+$;
+
+alter function private._boralog_161_test_recipient_count(uuid, uuid) owner to postgres;
+revoke all on function private._boralog_161_test_recipient_count(uuid, uuid)
+  from public, anon, service_role;
+grant execute on function private._boralog_161_test_recipient_count(uuid, uuid)
+  to authenticated;
+
 insert into auth.users (
   id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 ) values
@@ -84,10 +106,8 @@ begin
   from public.messages as m
   where m.id=v_id;
 
-  select count(*)
-    into v_recipient_count
-  from public.message_recipients
-  where message_id=v_id;
+  select private._boralog_161_test_recipient_count(v_id)
+    into v_recipient_count;
 
   insert into _boralog_161_results values (
     'ORGANIZATION_CREATE_PASS',
@@ -114,11 +134,11 @@ begin
     array['16100000-0000-4000-8000-000000000002'::uuid]
   ) as created;
 
-  select count(*)
-    into v_recipient_count
-  from public.message_recipients
-  where message_id=v_id
-    and user_id='16100000-0000-4000-8000-000000000002';
+  select private._boralog_161_test_recipient_count(
+    v_id,
+    '16100000-0000-4000-8000-000000000002'::uuid
+  )
+    into v_recipient_count;
 
   insert into _boralog_161_results values (
     'RESTRICTED_CREATE_WITH_RECIPIENT_PASS',
@@ -146,10 +166,8 @@ begin
     ]
   ) as created;
 
-  select count(*)
-    into v_recipient_count
-  from public.message_recipients
-  where message_id=v_id;
+  select private._boralog_161_test_recipient_count(v_id)
+    into v_recipient_count;
 
   insert into _boralog_161_results values (
     'MULTIPLE_RECIPIENTS_PASS',
@@ -405,10 +423,8 @@ begin
   from public.messages
   where id=v_id;
 
-  select count(*) into v_self_recipient
-  from public.message_recipients
-  where message_id=v_id
-    and user_id=auth.uid();
+  select private._boralog_161_test_recipient_count(v_id, auth.uid())
+    into v_self_recipient;
 
   insert into _boralog_161_results values (
     'LIMITED_RESTRICTED_CREATOR_ACCESS',
