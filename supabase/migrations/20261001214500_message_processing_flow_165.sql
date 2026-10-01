@@ -136,7 +136,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $boralog$
 begin
   if new.status <> 'TO_PROCESS'
      or new.processed_at is not null
@@ -148,7 +148,7 @@ begin
 
   return new;
 end
-$;
+$boralog$;
 
 alter function private.boralog_validate_new_message_processing_state() owner to postgres;
 revoke all on function private.boralog_validate_new_message_processing_state()
