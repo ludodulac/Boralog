@@ -268,7 +268,7 @@ begin
   );
 end $$;
 
-do $
+do $$
 declare
   v_denied boolean := false;
   v_message_rows bigint;
@@ -299,7 +299,7 @@ begin
     v_denied and v_message_rows=0,
     'denied='||v_denied||', messages='||v_message_rows
   );
-end $;
+end $$;
 
 do $$
 declare
