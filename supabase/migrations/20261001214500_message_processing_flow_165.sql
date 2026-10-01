@@ -131,6 +131,35 @@ alter function private.boralog_guard_message_provenance() owner to postgres;
 revoke all on function private.boralog_guard_message_provenance()
   from public, anon, authenticated, service_role;
 
+create or replace function private.boralog_validate_new_message_processing_state()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+begin
+  if new.status <> 'TO_PROCESS'
+     or new.processed_at is not null
+     or new.processed_by is not null
+     or new.resolution is not null then
+    raise exception 'new message must start TO_PROCESS without processing metadata'
+      using errcode = '23514';
+  end if;
+
+  return new;
+end
+$;
+
+alter function private.boralog_validate_new_message_processing_state() owner to postgres;
+revoke all on function private.boralog_validate_new_message_processing_state()
+  from public, anon, authenticated, service_role;
+
+create trigger boralog_new_message_processing_state
+before insert
+on public.messages
+for each row
+execute function private.boralog_validate_new_message_processing_state();
+
 create or replace function private.boralog_assert_processed_message_has_consequence()
 returns trigger
 language plpgsql
@@ -180,13 +209,6 @@ $$;
 alter function private.boralog_assert_processed_message_has_consequence() owner to postgres;
 revoke all on function private.boralog_assert_processed_message_has_consequence()
   from public, anon, authenticated, service_role;
-
-create constraint trigger boralog_processed_message_consequence_guard
-after insert or update
-on public.messages
-deferrable initially deferred
-for each row
-execute function private.boralog_assert_processed_message_has_consequence();
 
 create constraint trigger boralog_information_source_delete_guard
 after delete or update
