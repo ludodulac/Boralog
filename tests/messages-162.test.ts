@@ -64,3 +64,10 @@ test("BORALOG-162 does not introduce forbidden next-contract surfaces", () => {
   const combined = [actions, form, page].join("\n");
   assert.doesNotMatch(combined, /pièces jointes|commentaires|threads|recherche globale/i);
 });
+
+
+test("BORALOG-162 keeps LIMITED organization audience gated by context", () => {
+  assert.match(form, /organizationRequiresContext && contextMode === "NONE"/);
+  assert.match(page, /organizationRequiresContext = identity\.organization\.accessLevel === "limited"/);
+  assert.match(page, /hasContextOptions = projectOptions\.length > 0 \|\| dateOptions\.length > 0/);
+});
