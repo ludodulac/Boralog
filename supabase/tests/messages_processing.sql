@@ -444,15 +444,15 @@ end $$;
 
 reset role;
 
-select test, pass, detail
-from _boralog_144_results
-order by test;
-
-do $
+do $$
 begin
   if exists (select 1 from _boralog_144_results where not pass) then
     raise exception 'BORALOG-144 Message processing test failed';
   end if;
-end $;
+end $$;
+
+select test, pass, detail
+from _boralog_144_results
+order by test;
 
 rollback;
