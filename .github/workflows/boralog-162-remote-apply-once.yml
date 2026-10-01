@@ -1,0 +1,198 @@
+name: BORALOG-162 remote apply once
+
+on:
+  push:
+    branches:
+      - ops/boralog-162-remote-apply
+    paths:
+      - .github/workflows/boralog-162-remote-apply-once.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: boralog-supabase-migration-control-plane
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply BORALOG-162 only
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      EXPECTED_PROJECT_REF: jwtawyeuyvqjikjvfhri
+      EXPECTED_SOURCE_SHA: 779357bc88ae28b7aceeaf7a05faf7cc991517a3
+      EXPECTED_MIGRATION_VERSION: "20261001150000"
+      EXPECTED_MIGRATION_FILE: supabase/migrations/20261001150000_message_context_create_162.sql
+
+    steps:
+      - name: Guard one-shot operation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/heads/ops/boralog-162-remote-apply"
+          test "${EXPECTED_PROJECT_REF}" = "jwtawyeuyvqjikjvfhri"
+          test "${EXPECTED_SOURCE_SHA}" = "779357bc88ae28b7aceeaf7a05faf7cc991517a3"
+          test "${EXPECTED_MIGRATION_VERSION}" = "20261001150000"
+          echo "TARGET_PROJECT=${EXPECTED_PROJECT_REF}"
+          echo "CANDIDATE_HEAD=${EXPECTED_SOURCE_SHA}"
+          echo "EXPECTED_MIGRATION=${EXPECTED_MIGRATION_FILE}"
+
+      - name: Check out exact BORALOG-162 candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: 779357bc88ae28b7aceeaf7a05faf7cc991517a3
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Verify exact source and migration file
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual_sha="$(git rev-parse HEAD)"
+          echo "SOURCE_HEAD=${actual_sha}"
+          test "${actual_sha}" = "${EXPECTED_SOURCE_SHA}"
+          test -f "${EXPECTED_MIGRATION_FILE}"
+          matching_files="$(find supabase/migrations -maxdepth 1 -type f -name "${EXPECTED_MIGRATION_VERSION}_*.sql" -print)"
+          matching_count="$(printf '%s\n' "${matching_files}" | sed '/^$/d' | wc -l | tr -d ' ')"
+          test "${matching_count}" = "1"
+          test "${matching_files}" = "${EXPECTED_MIGRATION_FILE}"
+
+      - name: Install official Supabase CLI
+        uses: supabase/setup-cli@3c2f5e2ae34c34e428e8e206e2c4d21fa2d20fbf
+        with:
+          version: latest
+
+      - name: Verify required repository secrets
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "${SUPABASE_ACCESS_TOKEN:-}"
+          test -n "${SUPABASE_DB_PASSWORD:-}"
+
+      - name: Link CLI to fixed Boralog project
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "${EXPECTED_PROJECT_REF}"
+
+      - name: Ensure IPv4 Supavisor metadata
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          pooler_file="supabase/.temp/pooler-url"
+          if [ -s "${pooler_file}" ]; then
+            echo "IPv4 pooler metadata already available."
+            exit 0
+          fi
+          response_file="${RUNNER_TEMP}/boralog-pooler-config.json"
+          curl --fail --silent --show-error \
+            --request GET \
+            --header "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+            "https://api.supabase.com/v1/projects/${EXPECTED_PROJECT_REF}/config/database/pooler" \
+            --output "${response_file}"
+          pooler_url="$(jq -er '
+            [ .[] | select(.database_type == "PRIMARY") | .connection_string ]
+            | if length == 1 then .[0] else error("expected exactly one PRIMARY pooler") end
+          ' "${response_file}")"
+          pooler_url="${pooler_url/:[YOUR-PASSWORD]@/@}"
+          pooler_url="${pooler_url/:6543\//:5432\/}"
+          test -n "${pooler_url}"
+          mkdir -p "$(dirname "${pooler_file}")"
+          printf '%s\n' "${pooler_url}" > "${pooler_file}"
+          chmod 600 "${pooler_file}"
+          echo "IPv4 pooler metadata prepared."
+
+      - name: Compare migration history
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          output_file="${RUNNER_TEMP}/boralog-migration-list.txt"
+          set +e
+          supabase migration list 2>&1 | tee "${output_file}"
+          status="${PIPESTATUS[0]}"
+          set -e
+          if [ "${status}" -ne 0 ]; then
+            if grep -Eiq 'migration.*(repair|history|remote|local)|remote.*migration|migration.*not found' "${output_file}"; then
+              echo "::error title=REMOTE_LOCAL_HISTORY_MISMATCH::Local and remote migration history are incompatible. No repair is permitted."
+            else
+              echo "::error::Supabase migration list failed."
+            fi
+            exit "${status}"
+          fi
+
+      - name: Dry-run and enforce migration 162 only
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          output_file="${RUNNER_TEMP}/boralog-db-push-dry-run.txt"
+          set +e
+          supabase db push --dry-run 2>&1 | tee "${output_file}"
+          status="${PIPESTATUS[0]}"
+          set -e
+          if [ "${status}" -ne 0 ]; then
+            if grep -Eiq 'migration.*(repair|history|remote|local)|remote.*migration|migration.*not found' "${output_file}"; then
+              echo "::error title=REMOTE_LOCAL_HISTORY_MISMATCH::Dry-run found incompatible migration history. No repair is permitted."
+            else
+              echo "::error::Supabase db push --dry-run failed."
+            fi
+            exit "${status}"
+          fi
+          expected_basename="$(basename "${EXPECTED_MIGRATION_FILE}")"
+          mapfile -t proposed_files < <(grep -Eo '[0-9]{14}_[^[:space:]]+\.sql' "${output_file}" | sed 's#^.*/##' | sort -u)
+          if [ "${#proposed_files[@]}" -ne 1 ] || [ "${proposed_files[0]}" != "${expected_basename}" ]; then
+            echo "::error::Dry-run did not identify exactly the authorized migration."
+            printf 'Detected candidate files: %s\n' "${proposed_files[*]:-none}"
+            exit 1
+          fi
+          echo "DRY_RUN_ONLY_MIGRATION=${proposed_files[0]}"
+
+      - name: Apply migration 162
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase db push
+
+      - name: Verify exact history after apply
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          output_file="${RUNNER_TEMP}/boralog-migration-list-after.txt"
+          supabase migration list | tee "${output_file}"
+          grep -Fq "${EXPECTED_MIGRATION_VERSION}" "${output_file}"
+
+      - name: Verify no migration remains pending
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.BORALOG_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          output_file="${RUNNER_TEMP}/boralog-db-push-after-dry-run.txt"
+          supabase db push --dry-run 2>&1 | tee "${output_file}"
+          if grep -Eq '[0-9]{14}_[^[:space:]]+\.sql' "${output_file}"; then
+            echo "::error::A migration still appears pending after BORALOG-162 apply."
+            exit 1
+          fi
+          echo "BORALOG_162_REMOTE_APPLY=PASS"
