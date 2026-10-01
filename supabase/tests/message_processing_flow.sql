@@ -493,7 +493,7 @@ create temporary table _boralog_165_last_link(
   information_id uuid not null
 ) on commit drop;
 
-do $
+do $last_link_create$
 declare
   mid uuid;
   info_id uuid;
@@ -512,11 +512,12 @@ begin
   where message_id=mid;
 
   insert into _boralog_165_last_link values (mid,info_id);
-end $;
+end
+$last_link_create$;
 
 reset role;
 
-do $
+do $last_link_delete$
 declare
   mid uuid;
   info_id uuid;
@@ -543,7 +544,8 @@ begin
     ),
     ''
   );
-end $;
+end
+$last_link_delete$;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','16500000-0000-4000-8000-000000000001',true);
