@@ -452,11 +452,15 @@ begin
 end $$;
 
 -- Last consequence link cannot be removed from a processed CONSEQUENCES_CREATED Message.
-do $$
+create temporary table _boralog_165_last_link(
+  message_id uuid not null,
+  information_id uuid not null
+) on commit drop;
+
+do $
 declare
   mid uuid;
   info_id uuid;
-  denied boolean:=false;
 begin
   select id into mid from public.boralog_create_internal_message(
     '16510000-0000-4000-8000-000000000001','165 last link guard','ORGANIZATION','{}',
@@ -471,7 +475,20 @@ begin
   from public.information_message_sources
   where message_id=mid;
 
-  reset role;
+  insert into _boralog_165_last_link values (mid,info_id);
+end $;
+
+reset role;
+
+do $
+declare
+  mid uuid;
+  info_id uuid;
+  denied boolean:=false;
+begin
+  select message_id,information_id into mid,info_id
+  from _boralog_165_last_link;
+
   begin
     delete from public.information_message_sources
     where information_id=info_id and message_id=mid;
@@ -479,10 +496,8 @@ begin
   exception when check_violation then
     denied:=true;
   end;
-  set constraints all deferred;
 
-  set local role authenticated;
-  perform set_config('request.jwt.claim.sub','16500000-0000-4000-8000-000000000001',true);
+  set constraints all deferred;
 
   insert into _boralog_165_results values (
     'LAST_CONSEQUENCE_LINK_DELETE_DENIED_WHEN_PROCESSED',
@@ -492,7 +507,10 @@ begin
     ),
     ''
   );
-end $$;
+end $;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','16500000-0000-4000-8000-000000000001',true);
 
 -- Restricted Message: owner can process, LIMITED can see consequence but not source nor provenance edge.
 do $$
