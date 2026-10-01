@@ -398,16 +398,19 @@ security invoker
 set search_path = ''
 as $$
 declare
-  v_message public.messages%rowtype;
+  v_message public.messages;
 begin
-  select processed.*
-    into v_message
-  from public.boralog_process_message(
-    p_message_id,
-    'NO_FOLLOW_UP',
-    '{}'::text[],
-    '{}'::text[]
-  ) as processed;
+  update public.messages
+     set status = 'PROCESSED',
+         resolution = 'NO_FOLLOW_UP'
+   where id = p_message_id
+     and status = 'TO_PROCESS'
+  returning * into v_message;
+
+  if v_message.id is null then
+    raise exception 'message not found or not processable'
+      using errcode = 'P0002';
+  end if;
 
   return v_message;
 end
