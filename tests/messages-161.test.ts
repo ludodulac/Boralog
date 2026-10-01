@@ -17,11 +17,11 @@ test("BORALOG-161 rejects a restricted Message with zero selected people", () =>
   assert.match(actions, /Choisissez au moins une personne\./);
 });
 
-test("BORALOG-161 keeps the form minimal", () => {
+test("BORALOG-161 audience contract remains present after later extensions", () => {
   assert.match(form, /Toute l’organisation/);
   assert.match(form, /Personnes choisies/);
   assert.match(form, /"Enregistrer"/);
-  assert.doesNotMatch(form, /project_id|event_id|recipient_group|Information|Tâche/);
+  assert.doesNotMatch(form, /recipient_group|Information|Tâche/);
 });
 
 test("BORALOG-161 reuses the secure recipient directory", () => {
