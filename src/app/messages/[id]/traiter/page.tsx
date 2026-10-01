@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "../../../lib/supabase/server";
+import { createClient } from "../../../../lib/supabase/server";
 import { ProcessMessageForm } from "./ProcessMessageForm";
 
 export default async function ProcessMessagePage({
