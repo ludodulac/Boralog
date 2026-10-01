@@ -38,9 +38,11 @@ insert into public.organization_memberships(
   ('15910000-0000-4000-8000-000000000001','15900000-0000-4000-8000-000000000005',null,'suspended','full'),
   ('15910000-0000-4000-8000-000000000002','15900000-0000-4000-8000-000000000006',null,'active','full');
 
-set local role authenticated;
 select set_config('request.jwt.claim.sub','15900000-0000-4000-8000-000000000001',true);
 
+-- Group tables are intentionally closed to authenticated clients in 159.
+-- Create the fixture as postgres while preserving the authenticated actor claim
+-- so the coherence trigger still verifies created_by = auth.uid().
 insert into public.recipient_groups(
   id, organization_id, name, created_by
 ) values (
@@ -49,6 +51,8 @@ insert into public.recipient_groups(
   'Équipe diffusion',
   auth.uid()
 );
+
+set local role authenticated;
 
 insert into public.messages(
   id, organization_id, content, created_by, origin_type, author_user_id, visibility
