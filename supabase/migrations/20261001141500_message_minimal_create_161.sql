@@ -150,7 +150,7 @@ begin
   end if;
   return new;
 end
-$;
+$$;
 
 alter function private.boralog_restricted_message_requires_recipient() owner to postgres;
 revoke all on function private.boralog_restricted_message_requires_recipient()
