@@ -65,14 +65,19 @@ begin
       v_business_eligible :=
         v_event_project_id is not null
         and private.boralog_can_access_project(v_event_project_id);
-    elsif p_visibility = 'RESTRICTED' then
-      -- No Project/Date is allowed for LIMITED only when confidentiality itself
-      -- establishes the narrow audience. Creator/author access stays explicit
-      -- and does not grant organization-wide visibility.
+    else
+      -- Preserve BORALOG-157 exactly: an explicit recipient can establish
+      -- business eligibility for a contextless Message. BORALOG-161 adds only
+      -- the narrow RESTRICTED creator/author path needed for atomic creation.
       v_business_eligible :=
-        v_actor = p_created_by
-        or v_actor = p_author_user_id
-        or v_is_recipient;
+        v_is_recipient
+        or (
+          p_visibility = 'RESTRICTED'
+          and (
+            v_actor = p_created_by
+            or v_actor = p_author_user_id
+          )
+        );
     end if;
   end if;
 
