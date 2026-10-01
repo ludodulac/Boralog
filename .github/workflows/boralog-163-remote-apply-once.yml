@@ -24,7 +24,7 @@ jobs:
       EXPECTED_PROJECT_REF: jwtawyeuyvqjikjvfhri
       EXPECTED_SOURCE_SHA: e486c2ead65350c4c97440d5ffdc044ff0ce7f07
       EXPECTED_MIGRATION_VERSION: "20261001163000"
-      EXPECTED_MIGRATION_FILE: supabase/migrations/20261001163000_message_context_create_162.sql
+      EXPECTED_MIGRATION_FILE: supabase/migrations/20261001163000_information_foundation_163.sql
 
     steps:
       - name: Guard one-shot operation
