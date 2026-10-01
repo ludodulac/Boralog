@@ -61,6 +61,7 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001103000_message_reads_160.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001141500_message_minimal_create_161.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001150000_message_context_create_162.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001163000_information_foundation_163.sql
 
       - name: Run Boralog SQL tests
         shell: bash
@@ -76,3 +77,4 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_reads.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_minimal_create.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_context_create.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/information_foundation.sql
