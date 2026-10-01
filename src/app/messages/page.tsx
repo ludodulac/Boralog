@@ -22,7 +22,11 @@ export default async function MessagesPage() {
   if (!identity.organization) return null;
 
   const supabase = await createClient();
-  const [{ data: projects, error: projectError }, { data: messages, error: messageError }] = await Promise.all([
+  const [
+    { data: projects },
+    { data: messages, error: messageError },
+    { data: recipientDirectory, error: recipientDirectoryError },
+  ] = await Promise.all([
     supabase
       .from("projects")
       .select("id, name, archived_at")
@@ -33,16 +37,25 @@ export default async function MessagesPage() {
       .select("id, project_id, content, status, created_at")
       .eq("organization_id", identity.organization.id)
       .order("created_at", { ascending: false }),
+    supabase.rpc("boralog_message_recipient_directory", {
+      p_organization_id: identity.organization.id,
+    }),
   ]);
 
   const accessibleProjects = projects ?? [];
-  const selectableProjects = accessibleProjects
-    .filter((project) => project.archived_at === null)
-    .map((project) => ({ id: project.id, name: project.name }));
   const projectNames = new Map(accessibleProjects.map((project) => [project.id, project.name]));
   const realMessages = messages ?? [];
-  const requiresProject = identity.organization.accessLevel === "limited";
-  const canCreateMessage = !requiresProject || (!projectError && selectableProjects.length > 0);
+  const recipients = (recipientDirectory ?? []).map((recipient: {
+    user_id: string;
+    display_name: string | null;
+  }) => ({
+    user_id: recipient.user_id,
+    display_name: recipient.display_name,
+  }));
+
+  const canCreateOrganization = identity.organization.accessLevel !== "limited";
+  const canCreateRestricted = !recipientDirectoryError && recipients.length > 0;
+  const canCreateMessage = canCreateOrganization || canCreateRestricted;
 
   return <main className="entity-page"><div className="entity-wrap">
     <header className="entity-header">
@@ -54,9 +67,15 @@ export default async function MessagesPage() {
     <section aria-labelledby="new-message-title">
       <h2 id="new-message-title">Nouveau message</h2>
       {canCreateMessage ? (
-        <CreateMessageForm projects={selectableProjects} requiresProject={requiresProject} />
+        <CreateMessageForm
+          recipients={recipients}
+          canCreateOrganization={canCreateOrganization}
+          canCreateRestricted={canCreateRestricted}
+        />
       ) : (
-        <p className="work-empty">Aucun projet accessible pour créer un message.</p>
+        <p className="work-empty">
+          {recipientDirectoryError ? "L’annuaire n’a pas pu être chargé." : "Aucune personne disponible."}
+        </p>
       )}
     </section>
 

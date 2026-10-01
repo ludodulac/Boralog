@@ -6,6 +6,8 @@ import { initialCreateMessageState, type CreateMessageState } from "./state";
 
 export type { CreateMessageState } from "./state";
 
+type MessageVisibility = "ORGANIZATION" | "RESTRICTED";
+
 function normalizeContent(value: FormDataEntryValue | null) {
   if (typeof value !== "string") return "";
   return value.trim().replace(/\r\n/g, "\n");
@@ -15,20 +17,43 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+function readVisibility(value: FormDataEntryValue | null): MessageVisibility | null {
+  if (value === "ORGANIZATION" || value === "RESTRICTED") return value;
+  return null;
+}
+
 export async function createMessage(
   _previousState: CreateMessageState = initialCreateMessageState,
   formData: FormData
 ): Promise<CreateMessageState> {
   const content = normalizeContent(formData.get("content"));
-  const projectId = String(formData.get("project_id") ?? "").trim();
-  const values = { content, projectId };
+  const visibility = readVisibility(formData.get("visibility"));
+  const rawRecipientIds = formData
+    .getAll("recipient_user_ids")
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const recipientUserIds = [...new Set(rawRecipientIds)];
+  const values = { content };
 
   if (!content) {
-    return { status: "error", message: "Écrivez le message à traiter.", values };
+    return { status: "error", message: "Écrivez un message.", values };
   }
 
-  if (projectId && !isUuid(projectId)) {
-    return { status: "error", message: "Le projet sélectionné n’est pas valide.", values };
+  if (!visibility) {
+    return { status: "error", message: "Choisissez qui peut lire ce message.", values };
+  }
+
+  if (recipientUserIds.some((recipientId) => !isUuid(recipientId))) {
+    return { status: "error", message: "La sélection de personnes n’est pas valide.", values };
+  }
+
+  if (visibility === "RESTRICTED" && recipientUserIds.length === 0) {
+    return { status: "error", message: "Choisissez au moins une personne.", values };
+  }
+
+  if (visibility === "ORGANIZATION" && recipientUserIds.length > 0) {
+    return { status: "error", message: "La sélection de personnes n’est pas valide.", values };
   }
 
   const supabase = await createClient();
@@ -57,49 +82,25 @@ export async function createMessage(
     };
   }
 
-  if (membership.access_level === "limited" && !projectId) {
+  if (membership.access_level === "limited" && visibility === "ORGANIZATION") {
     return {
       status: "error",
-      message: "Choisissez un projet accessible pour créer ce message.",
+      message: "Choisissez des personnes pour ce message.",
       values,
     };
   }
 
-  let validatedProjectId: string | null = null;
-
-  if (projectId) {
-    const { data: project, error: projectError } = await supabase
-      .from("projects")
-      .select("id")
-      .eq("id", projectId)
-      .eq("organization_id", membership.organization_id)
-      .is("archived_at", null)
-      .maybeSingle();
-
-    if (projectError || !project) {
-      return {
-        status: "error",
-        message: "Ce projet n’est pas accessible.",
-        values,
-      };
-    }
-
-    validatedProjectId = project.id;
-  }
-
-  const { error } = await supabase.from("messages").insert({
-    organization_id: membership.organization_id,
-    project_id: validatedProjectId,
-    content,
-    created_by: authData.user.id,
-    origin_type: "INTERNAL",
-    author_user_id: authData.user.id,
+  const { error } = await supabase.rpc("boralog_create_internal_message", {
+    p_organization_id: membership.organization_id,
+    p_content: content,
+    p_visibility: visibility,
+    p_recipient_user_ids: visibility === "RESTRICTED" ? recipientUserIds : [],
   });
 
   if (error) {
     return {
       status: "error",
-      message: "Le message n’a pas pu être enregistré. Vérifiez votre connexion puis réessayez.",
+      message: "Le message n’a pas pu être enregistré. Vérifiez la sélection puis réessayez.",
       values,
     };
   }
@@ -108,6 +109,6 @@ export async function createMessage(
   return {
     status: "success",
     message: "Message enregistré.",
-    values: { content: "", projectId: "" },
+    values: { content: "" },
   };
 }
