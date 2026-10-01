@@ -20,12 +20,12 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select count(*)
   from public.message_recipients as mr
   where mr.message_id = p_message_id
     and (p_user_id is null or mr.user_id = p_user_id)
-$;
+$$;
 
 alter function private._boralog_161_test_recipient_count(uuid, uuid) owner to postgres;
 revoke all on function private._boralog_161_test_recipient_count(uuid, uuid)
