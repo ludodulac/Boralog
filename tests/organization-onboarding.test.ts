@@ -217,11 +217,16 @@ test("Dates page reads real events for the current project without demo data", (
 });
 
 
-test("Message writer sends INTERNAL provenance on the primary insert", () => {
+test("Message writer preserves INTERNAL provenance through the atomic RPC", () => {
   const source = fs.readFileSync("src/app/messages/actions.ts", "utf8");
-  assert.match(source, /origin_type:\s*"INTERNAL"/);
-  assert.match(source, /author_user_id:\s*authData\.user\.id/);
-  assert.match(source, /created_by:\s*authData\.user\.id/);
+  const migration = fs.readFileSync(
+    "supabase/migrations/20261001141500_message_minimal_create_161.sql",
+    "utf8"
+  );
+
+  assert.match(source, /\.rpc\("boralog_create_internal_message"/);
+  assert.match(migration, /insert into public\.messages\([\s\S]*?created_by,[\s\S]*?origin_type,[\s\S]*?author_user_id/);
+  assert.match(migration, /v_actor,[\s\S]*?'INTERNAL',[\s\S]*?v_actor/);
 });
 
 test("Message writer has no legacy provenance bridge after 155 rollout", () => {
@@ -229,5 +234,6 @@ test("Message writer has no legacy provenance bridge after 155 rollout", () => {
   assert.doesNotMatch(source, /PGRST204/);
   assert.doesNotMatch(source, /isMissingProvenanceColumnError/);
   assert.doesNotMatch(source, /legacyInsertError|messageInsert/);
-  assert.match(source, /from\("messages"\)\.insert\(\{[\s\S]*?origin_type:\s*"INTERNAL"[\s\S]*?author_user_id:\s*authData\.user\.id/);
+  assert.match(source, /\.rpc\("boralog_create_internal_message"/);
+  assert.doesNotMatch(source, /\.from\("messages"\)\.insert/);
 });
