@@ -1,0 +1,109 @@
+name: BORALOG-164 post-merge certification
+
+on:
+  push:
+    branches:
+      - ops/boralog-164-postmerge-certification
+    paths:
+      - .github/workflows/boralog-164-postmerge-certification.yml
+
+permissions:
+  contents: read
+
+jobs:
+  database-tests:
+    name: Database tests post-merge
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: boralog_test
+        options: >-
+          --health-cmd "pg_isready -U postgres -d boralog_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Check out exact merged Foundation HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: a15d3ddd05724c2c4a9bb32e1e695eb23b4b4a1c
+          persist-credentials: false
+      - name: Verify exact HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "a15d3ddd05724c2c4a9bb32e1e695eb23b4b4a1c"
+          echo "FOUNDATION_HEAD=$(git rev-parse HEAD)"
+      - name: Verify PostgreSQL health
+        run: >-
+          docker exec "${{ job.services.postgres.id }}"
+          pg_isready -U postgres -d boralog_test
+      - name: Bootstrap minimal Supabase SQL primitives
+        run: >-
+          docker exec -i "${{ job.services.postgres.id }}"
+          psql -U postgres -d boralog_test -v ON_ERROR_STOP=1
+          < supabase/tests/bootstrap_supabase_primitives.sql
+      - name: Apply Boralog migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260923233620_foundation_identity_organizations_projects.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260923233638_foundation_policy_and_index_hardening.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260925063848_profile_foundation_auth_user_trigger.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260925213621_access_model_owner_full_limited.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260928122045_event_date_optional_time.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260929093109_messages_db_foundation_127.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260929172527_message_processing_db_foundation_144.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20260930095713_message_communication_provenance_155.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001083000_message_recipients_foundation_156.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001090000_message_visibility_rls_157.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001093000_message_recipient_directory_158.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001100000_recipient_groups_materialization_159.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001103000_message_reads_160.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001141500_message_minimal_create_161.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001150000_message_context_create_162.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001163000_information_foundation_163.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001173500_task_foundation_164.sql
+      - name: Run Boralog SQL tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/messages_communication_provenance.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/messages_processing.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/messages_rls.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_recipients_foundation.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_visibility_rls.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_recipient_directory.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/recipient_groups_materialization.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_reads.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_minimal_create.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_context_create.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/information_foundation.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/task_foundation.sql
+
+  foundation-build:
+    name: Foundation build post-merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact merged Foundation HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: a15d3ddd05724c2c4a9bb32e1e695eb23b4b4a1c
+          persist-credentials: false
+      - name: Verify exact HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "a15d3ddd05724c2c4a9bb32e1e695eb23b4b4a1c"
+          echo "FOUNDATION_HEAD=$(git rev-parse HEAD)"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
