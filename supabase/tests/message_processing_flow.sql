@@ -10,6 +10,35 @@ create temporary table _boralog_165_results (
 ) on commit drop;
 grant select, insert, update on _boralog_165_results to authenticated;
 
+create or replace function private._boralog_165_test_recipient_count(p_message_id uuid)
+returns bigint
+language sql
+stable
+security definer
+set search_path = ''
+as $test$
+  select count(*)
+  from public.message_recipients r
+  where r.message_id=p_message_id
+$test$;
+
+create or replace function private._boralog_165_test_read_count(p_message_id uuid)
+returns bigint
+language sql
+stable
+security definer
+set search_path = ''
+as $test$
+  select count(*)
+  from public.message_reads r
+  where r.message_id=p_message_id
+$test$;
+
+revoke all on function private._boralog_165_test_recipient_count(uuid) from public, anon, service_role;
+revoke all on function private._boralog_165_test_read_count(uuid) from public, anon, service_role;
+grant execute on function private._boralog_165_test_recipient_count(uuid) to authenticated;
+grant execute on function private._boralog_165_test_read_count(uuid) to authenticated;
+
 insert into auth.users (
   id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 ) values
@@ -141,8 +170,8 @@ reset role;
 create temporary table _boralog_165_message_snapshot on commit drop as
 select
   to_jsonb(m) as snapshot,
-  (select count(*) from public.message_recipients r where r.message_id=m.id) as recipient_count,
-  (select count(*) from public.message_reads r where r.message_id=m.id) as read_count
+  private._boralog_165_test_recipient_count(m.id) as recipient_count,
+  private._boralog_165_test_read_count(m.id) as read_count
 from public.messages m
 where m.id=(select id from _boralog_165_messages where name='info-project');
 
@@ -445,8 +474,8 @@ begin
   from _boralog_165_message_snapshot;
 
   select to_jsonb(m), 
-         (select count(*) from public.message_recipients r where r.message_id=m.id),
-         (select count(*) from public.message_reads r where r.message_id=m.id)
+         private._boralog_165_test_recipient_count(m.id),
+         private._boralog_165_test_read_count(m.id)
     into after_row,after_recipient_count,after_read_count
   from public.messages m where m.id=mid;
 
