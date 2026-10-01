@@ -120,7 +120,9 @@ begin
     v_message_id := new.id;
     v_visibility := new.visibility;
   else
-    v_message_id := coalesce(new.message_id, old.message_id);
+    -- This trigger is attached only to DELETE/UPDATE on message_recipients.
+    -- Always validate the message losing (or changing) the recipient row.
+    v_message_id := old.message_id;
 
     select m.visibility
       into v_visibility
