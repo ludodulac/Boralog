@@ -128,7 +128,10 @@ begin
     where m.id = v_message_id;
 
     if not found then
-      return coalesce(new, old);
+      if tg_op = 'DELETE' then
+        return old;
+      end if;
+      return new;
     end if;
   end if;
 
@@ -142,9 +145,12 @@ begin
       using errcode = '23514';
   end if;
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
 end
-$$;
+$;
 
 alter function private.boralog_restricted_message_requires_recipient() owner to postgres;
 revoke all on function private.boralog_restricted_message_requires_recipient()
