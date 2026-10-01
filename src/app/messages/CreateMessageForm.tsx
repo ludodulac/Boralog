@@ -10,31 +10,54 @@ type MessageRecipientOption = {
   display_name: string | null;
 };
 
+type MessageProjectOption = {
+  id: string;
+  name: string;
+};
+
+type MessageDateOption = {
+  id: string;
+  label: string;
+};
+
 type MessageVisibility = "ORGANIZATION" | "RESTRICTED";
+type MessageContextMode = "NONE" | "PROJECT" | "DATE";
 
 export function CreateMessageForm({
   recipients,
+  projects,
+  dates,
   canCreateOrganization,
   canCreateRestricted,
+  organizationRequiresContext,
 }: {
   recipients: MessageRecipientOption[];
+  projects: MessageProjectOption[];
+  dates: MessageDateOption[];
   canCreateOrganization: boolean;
   canCreateRestricted: boolean;
+  organizationRequiresContext: boolean;
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [visibility, setVisibility] = useState<MessageVisibility>(
-    canCreateOrganization ? "ORGANIZATION" : "RESTRICTED"
-  );
+  const initialVisibility: MessageVisibility =
+    canCreateOrganization && !organizationRequiresContext
+      ? "ORGANIZATION"
+      : canCreateRestricted
+        ? "RESTRICTED"
+        : "ORGANIZATION";
+  const [visibility, setVisibility] = useState<MessageVisibility>(initialVisibility);
+  const [contextMode, setContextMode] = useState<MessageContextMode>("NONE");
   const [state, action, pending] = useActionState(createMessage, initialCreateMessageState);
 
   useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();
-      setVisibility(canCreateOrganization ? "ORGANIZATION" : "RESTRICTED");
+      setVisibility(initialVisibility);
+      setContextMode("NONE");
       router.refresh();
     }
-  }, [canCreateOrganization, router, state]);
+  }, [initialVisibility, router, state]);
 
   return <form ref={formRef} className="project-create-form" action={action} aria-busy={pending}>
     <label htmlFor="message-content">Message
@@ -58,7 +81,11 @@ export function CreateMessageForm({
           value="ORGANIZATION"
           checked={visibility === "ORGANIZATION"}
           onChange={() => setVisibility("ORGANIZATION")}
-          disabled={pending || !canCreateOrganization}
+          disabled={
+            pending
+            || !canCreateOrganization
+            || (organizationRequiresContext && contextMode === "NONE")
+          }
         />
         <span>Toute l’organisation</span>
       </label>
@@ -97,6 +124,68 @@ export function CreateMessageForm({
           </div>
         )}
       </fieldset>
+    )}
+
+    <fieldset className="message-audience message-context">
+      <legend>Contexte facultatif</legend>
+
+      <label className="message-audience-choice">
+        <input
+          type="radio"
+          name="context_mode"
+          value="NONE"
+          checked={contextMode === "NONE"}
+          onChange={() => setContextMode("NONE")}
+          disabled={pending}
+        />
+        <span>Aucun</span>
+      </label>
+
+      <label className="message-audience-choice">
+        <input
+          type="radio"
+          name="context_mode"
+          value="PROJECT"
+          checked={contextMode === "PROJECT"}
+          onChange={() => setContextMode("PROJECT")}
+          disabled={pending || projects.length === 0}
+        />
+        <span>Projet</span>
+      </label>
+
+      <label className="message-audience-choice">
+        <input
+          type="radio"
+          name="context_mode"
+          value="DATE"
+          checked={contextMode === "DATE"}
+          onChange={() => setContextMode("DATE")}
+          disabled={pending || dates.length === 0}
+        />
+        <span>Date</span>
+      </label>
+    </fieldset>
+
+    {contextMode === "PROJECT" && (
+      <label htmlFor="message-project">Projet
+        <select id="message-project" name="project_id" required disabled={pending} defaultValue="">
+          <option value="" disabled>Choisir un projet</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>{project.name}</option>
+          ))}
+        </select>
+      </label>
+    )}
+
+    {contextMode === "DATE" && (
+      <label htmlFor="message-date">Date
+        <select id="message-date" name="event_id" required disabled={pending} defaultValue="">
+          <option value="" disabled>Choisir une date</option>
+          {dates.map((date) => (
+            <option key={date.id} value={date.id}>{date.label}</option>
+          ))}
+        </select>
+      </label>
     )}
 
     {state.status === "error" && <p className="project-create-feedback error" role="alert">{state.message}</p>}

@@ -7,10 +7,15 @@ import { initialCreateMessageState, type CreateMessageState } from "./state";
 export type { CreateMessageState } from "./state";
 
 type MessageVisibility = "ORGANIZATION" | "RESTRICTED";
+type MessageContextMode = "NONE" | "PROJECT" | "DATE";
 
 function normalizeContent(value: FormDataEntryValue | null) {
   if (typeof value !== "string") return "";
   return value.trim().replace(/\r\n/g, "\n");
+}
+
+function readString(value: FormDataEntryValue | null) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function isUuid(value: string) {
@@ -22,12 +27,20 @@ function readVisibility(value: FormDataEntryValue | null): MessageVisibility | n
   return null;
 }
 
+function readContextMode(value: FormDataEntryValue | null): MessageContextMode | null {
+  if (value === "NONE" || value === "PROJECT" || value === "DATE") return value;
+  return null;
+}
+
 export async function createMessage(
   _previousState: CreateMessageState = initialCreateMessageState,
   formData: FormData
 ): Promise<CreateMessageState> {
   const content = normalizeContent(formData.get("content"));
   const visibility = readVisibility(formData.get("visibility"));
+  const contextMode = readContextMode(formData.get("context_mode"));
+  const projectId = readString(formData.get("project_id"));
+  const eventId = readString(formData.get("event_id"));
   const rawRecipientIds = formData
     .getAll("recipient_user_ids")
     .filter((value): value is string => typeof value === "string")
@@ -56,6 +69,22 @@ export async function createMessage(
     return { status: "error", message: "La sélection de personnes n’est pas valide.", values };
   }
 
+  if (!contextMode) {
+    return { status: "error", message: "Choisissez un contexte.", values };
+  }
+
+  if (contextMode === "NONE" && (projectId || eventId)) {
+    return { status: "error", message: "Le contexte sélectionné n’est pas valide.", values };
+  }
+
+  if (contextMode === "PROJECT" && (!isUuid(projectId) || eventId)) {
+    return { status: "error", message: "Choisissez un projet.", values };
+  }
+
+  if (contextMode === "DATE" && (!isUuid(eventId) || projectId)) {
+    return { status: "error", message: "Choisissez une date.", values };
+  }
+
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user) {
@@ -82,10 +111,14 @@ export async function createMessage(
     };
   }
 
-  if (membership.access_level === "limited" && visibility === "ORGANIZATION") {
+  if (
+    membership.access_level === "limited"
+    && visibility === "ORGANIZATION"
+    && contextMode === "NONE"
+  ) {
     return {
       status: "error",
-      message: "Choisissez des personnes pour ce message.",
+      message: "Choisissez un projet ou une date pour ce message.",
       values,
     };
   }
@@ -95,12 +128,14 @@ export async function createMessage(
     p_content: content,
     p_visibility: visibility,
     p_recipient_user_ids: visibility === "RESTRICTED" ? recipientUserIds : [],
+    p_project_id: contextMode === "PROJECT" ? projectId : null,
+    p_event_id: contextMode === "DATE" ? eventId : null,
   });
 
   if (error) {
     return {
       status: "error",
-      message: "Le message n’a pas pu être enregistré. Vérifiez la sélection puis réessayez.",
+      message: "Le message n’a pas pu être enregistré. Vérifiez les choix puis réessayez.",
       values,
     };
   }
