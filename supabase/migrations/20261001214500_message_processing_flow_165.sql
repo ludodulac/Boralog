@@ -84,7 +84,8 @@ begin
   end if;
 
   if new.status = 'PROCESSED' then
-    if new.resolution not in ('NO_FOLLOW_UP', 'CONSEQUENCES_CREATED') then
+    if new.resolution is null
+       or new.resolution not in ('NO_FOLLOW_UP', 'CONSEQUENCES_CREATED') then
       raise exception 'invalid message resolution'
         using errcode = '23514';
     end if;
