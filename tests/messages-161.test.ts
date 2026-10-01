@@ -20,7 +20,7 @@ test("BORALOG-161 rejects a restricted Message with zero selected people", () =>
 test("BORALOG-161 keeps the form minimal", () => {
   assert.match(form, /Toute l’organisation/);
   assert.match(form, /Personnes choisies/);
-  assert.match(form, />Enregistrer</);
+  assert.match(form, /"Enregistrer"/);
   assert.doesNotMatch(form, /project_id|event_id|recipient_group|Information|Tâche/);
 });
 
