@@ -29,29 +29,35 @@ export function CreateMessageForm({
   dates,
   canCreateOrganization,
   canCreateRestricted,
+  organizationRequiresContext,
 }: {
   recipients: MessageRecipientOption[];
   projects: MessageProjectOption[];
   dates: MessageDateOption[];
   canCreateOrganization: boolean;
   canCreateRestricted: boolean;
+  organizationRequiresContext: boolean;
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [visibility, setVisibility] = useState<MessageVisibility>(
-    canCreateOrganization ? "ORGANIZATION" : "RESTRICTED"
-  );
+  const initialVisibility: MessageVisibility =
+    canCreateOrganization && !organizationRequiresContext
+      ? "ORGANIZATION"
+      : canCreateRestricted
+        ? "RESTRICTED"
+        : "ORGANIZATION";
+  const [visibility, setVisibility] = useState<MessageVisibility>(initialVisibility);
   const [contextMode, setContextMode] = useState<MessageContextMode>("NONE");
   const [state, action, pending] = useActionState(createMessage, initialCreateMessageState);
 
   useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();
-      setVisibility(canCreateOrganization ? "ORGANIZATION" : "RESTRICTED");
+      setVisibility(initialVisibility);
       setContextMode("NONE");
       router.refresh();
     }
-  }, [canCreateOrganization, router, state]);
+  }, [initialVisibility, router, state]);
 
   return <form ref={formRef} className="project-create-form" action={action} aria-busy={pending}>
     <label htmlFor="message-content">Message
@@ -75,7 +81,11 @@ export function CreateMessageForm({
           value="ORGANIZATION"
           checked={visibility === "ORGANIZATION"}
           onChange={() => setVisibility("ORGANIZATION")}
-          disabled={pending || !canCreateOrganization}
+          disabled={
+            pending
+            || !canCreateOrganization
+            || (organizationRequiresContext && contextMode === "NONE")
+          }
         />
         <span>Toute l’organisation</span>
       </label>
