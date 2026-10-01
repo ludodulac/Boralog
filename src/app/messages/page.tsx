@@ -23,7 +23,7 @@ export default async function MessagesPage() {
 
   const supabase = await createClient();
   const [
-    { data: projects, error: projectError },
+    { data: projects },
     { data: messages, error: messageError },
     { data: recipientDirectory, error: recipientDirectoryError },
   ] = await Promise.all([
@@ -96,7 +96,5 @@ export default async function MessagesPage() {
         </div>
       )}
     </section>
-
-    {projectError && <span hidden>Projet indisponible</span>}
   </div></main>;
 }
