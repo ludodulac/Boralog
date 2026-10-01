@@ -136,6 +136,8 @@ select id,auth.uid()
 from _boralog_165_messages
 where name='info-project';
 
+reset role;
+
 create temporary table _boralog_165_message_snapshot on commit drop as
 select
   to_jsonb(m) as snapshot,
@@ -143,6 +145,11 @@ select
   (select count(*) from public.message_reads r where r.message_id=m.id) as read_count
 from public.messages m
 where m.id=(select id from _boralog_165_messages where name='info-project');
+
+grant select on _boralog_165_message_snapshot to authenticated;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','16500000-0000-4000-8000-000000000001',true);
 
 -- A: explicit no follow up.
 do $$
