@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentIdentity } from "../../lib/auth";
 import { createClient } from "../../lib/supabase/server";
@@ -41,6 +42,7 @@ export default async function MessagesPage() {
       .from("messages")
       .select("id, project_id, content, status, created_at")
       .eq("organization_id", identity.organization.id)
+      .eq("status", "TO_PROCESS")
       .order("created_at", { ascending: false }),
     supabase.rpc("boralog_message_recipient_directory", {
       p_organization_id: identity.organization.id,
@@ -136,6 +138,9 @@ export default async function MessagesPage() {
               <span>{displayStatus(message.status)}</span>
               {projectName && <small>{projectName}</small>}
               <small>{displayCreatedAt(message.created_at)}</small>
+              <Link className="message-process-link" href={`/messages/${message.id}/traiter`}>
+                Traiter
+              </Link>
             </article>;
           })}
         </div>
