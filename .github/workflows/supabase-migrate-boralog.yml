@@ -11,11 +11,6 @@ on:
         options:
           - check
           - apply
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/boralog-migration-apply-157.request"
 
 permissions:
   contents: read
@@ -26,7 +21,7 @@ concurrency:
 
 jobs:
   migrate:
-    name: "${{ github.event_name == 'push' && 'apply' || inputs.mode }} — Boralog migration"
+    name: "${{ inputs.mode }} — Boralog migration"
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -44,33 +39,12 @@ jobs:
 
           echo "CONTROL_PLANE_BRANCH=main"
           echo "EXPECTED_PROJECT_REF=${EXPECTED_PROJECT_REF}"
-          echo "MODE=${{ github.event_name == 'push' && 'apply' || inputs.mode }}"
+          echo "MODE=${{ inputs.mode }}"
 
           test "${GITHUB_REF}" = "refs/heads/main"
           test "${EXPECTED_PROJECT_REF}" = "jwtawyeuyvqjikjvfhri"
           test "${FOUNDATION_SOURCE_BRANCH}" = "build/foundation-v001"
           test "${EXPECTED_MIGRATION_VERSION}" = "20261001090000"
-
-      - name: Check out one-shot apply request
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: main
-          persist-credentials: false
-          fetch-depth: 1
-          sparse-checkout: |
-            .github/boralog-migration-apply-157.request
-
-      - name: Verify one-shot apply request
-        if: ${{ github.event_name == 'push' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          expected='BORALOG-157 APPLY 20261001090000 jwtawyeuyvqjikjvfhri'
-          actual="$(cat .github/boralog-migration-apply-157.request)"
-          test "${actual}" = "${expected}"
-          echo "ONE_SHOT_APPLY_REQUEST=VERIFIED"
 
       - name: Check out Foundation migration source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -223,7 +197,7 @@ jobs:
           echo "Dry-run gate PASS."
 
       - name: Apply migration after same-job dry-run gate
-        if: ${{ github.event_name == 'push' || inputs.mode == 'apply' }}
+        if: ${{ inputs.mode == 'apply' }}
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -233,7 +207,7 @@ jobs:
           supabase db push
 
       - name: Verify exact migration history after apply
-        if: ${{ github.event_name == 'push' || inputs.mode == 'apply' }}
+        if: ${{ inputs.mode == 'apply' }}
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
