@@ -10,14 +10,29 @@ type MessageRecipientOption = {
   display_name: string | null;
 };
 
+type MessageProjectOption = {
+  id: string;
+  name: string;
+};
+
+type MessageDateOption = {
+  id: string;
+  label: string;
+};
+
 type MessageVisibility = "ORGANIZATION" | "RESTRICTED";
+type MessageContextMode = "NONE" | "PROJECT" | "DATE";
 
 export function CreateMessageForm({
   recipients,
+  projects,
+  dates,
   canCreateOrganization,
   canCreateRestricted,
 }: {
   recipients: MessageRecipientOption[];
+  projects: MessageProjectOption[];
+  dates: MessageDateOption[];
   canCreateOrganization: boolean;
   canCreateRestricted: boolean;
 }) {
@@ -26,12 +41,14 @@ export function CreateMessageForm({
   const [visibility, setVisibility] = useState<MessageVisibility>(
     canCreateOrganization ? "ORGANIZATION" : "RESTRICTED"
   );
+  const [contextMode, setContextMode] = useState<MessageContextMode>("NONE");
   const [state, action, pending] = useActionState(createMessage, initialCreateMessageState);
 
   useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();
       setVisibility(canCreateOrganization ? "ORGANIZATION" : "RESTRICTED");
+      setContextMode("NONE");
       router.refresh();
     }
   }, [canCreateOrganization, router, state]);
@@ -97,6 +114,68 @@ export function CreateMessageForm({
           </div>
         )}
       </fieldset>
+    )}
+
+    <fieldset className="message-audience message-context">
+      <legend>Contexte facultatif</legend>
+
+      <label className="message-audience-choice">
+        <input
+          type="radio"
+          name="context_mode"
+          value="NONE"
+          checked={contextMode === "NONE"}
+          onChange={() => setContextMode("NONE")}
+          disabled={pending}
+        />
+        <span>Aucun</span>
+      </label>
+
+      <label className="message-audience-choice">
+        <input
+          type="radio"
+          name="context_mode"
+          value="PROJECT"
+          checked={contextMode === "PROJECT"}
+          onChange={() => setContextMode("PROJECT")}
+          disabled={pending || projects.length === 0}
+        />
+        <span>Projet</span>
+      </label>
+
+      <label className="message-audience-choice">
+        <input
+          type="radio"
+          name="context_mode"
+          value="DATE"
+          checked={contextMode === "DATE"}
+          onChange={() => setContextMode("DATE")}
+          disabled={pending || dates.length === 0}
+        />
+        <span>Date</span>
+      </label>
+    </fieldset>
+
+    {contextMode === "PROJECT" && (
+      <label htmlFor="message-project">Projet
+        <select id="message-project" name="project_id" required disabled={pending} defaultValue="">
+          <option value="" disabled>Choisir un projet</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>{project.name}</option>
+          ))}
+        </select>
+      </label>
+    )}
+
+    {contextMode === "DATE" && (
+      <label htmlFor="message-date">Date
+        <select id="message-date" name="event_id" required disabled={pending} defaultValue="">
+          <option value="" disabled>Choisir une date</option>
+          {dates.map((date) => (
+            <option key={date.id} value={date.id}>{date.label}</option>
+          ))}
+        </select>
+      </label>
     )}
 
     {state.status === "error" && <p className="project-create-feedback error" role="alert">{state.message}</p>}
