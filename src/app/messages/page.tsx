@@ -90,7 +90,9 @@ export default async function MessagesPage() {
         };
       });
 
-  const canCreateOrganization = identity.organization.accessLevel !== "limited";
+  const organizationRequiresContext = identity.organization.accessLevel === "limited";
+  const hasContextOptions = projectOptions.length > 0 || dateOptions.length > 0;
+  const canCreateOrganization = !organizationRequiresContext || hasContextOptions;
   const canCreateRestricted = !recipientDirectoryError && recipients.length > 0;
   const canCreateMessage = canCreateOrganization || canCreateRestricted;
 
@@ -110,6 +112,7 @@ export default async function MessagesPage() {
           dates={dateOptions}
           canCreateOrganization={canCreateOrganization}
           canCreateRestricted={canCreateRestricted}
+          organizationRequiresContext={organizationRequiresContext}
         />
       ) : (
         <p className="work-empty">
