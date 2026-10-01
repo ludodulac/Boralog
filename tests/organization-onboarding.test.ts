@@ -224,10 +224,10 @@ test("Message writer sends INTERNAL provenance on the primary insert", () => {
   assert.match(source, /created_by:\s*authData\.user\.id/);
 });
 
-test("temporary Message provenance bridge is limited to missing 155 PostgREST columns", () => {
+test("Message writer has no legacy provenance bridge after 155 rollout", () => {
   const source = fs.readFileSync("src/app/messages/actions.ts", "utf8");
-  assert.match(source, /if \(error\?\.code !== "PGRST204"\) return false/);
-  assert.match(source, /message\.includes\("origin_type"\) \|\| message\.includes\("author_user_id"\)/);
-  assert.match(source, /if \(isMissingProvenanceColumnError\(provenanceInsertError\)\) \{[\s\S]*?insert\(messageInsert\)/);
-  assert.doesNotMatch(source, /PGRST204[\s\S]*?RLS|PGRST204[\s\S]*?network/i);
+  assert.doesNotMatch(source, /PGRST204/);
+  assert.doesNotMatch(source, /isMissingProvenanceColumnError/);
+  assert.doesNotMatch(source, /legacyInsertError|messageInsert/);
+  assert.match(source, /from\("messages"\)\.insert\(\{[\s\S]*?origin_type:\s*"INTERNAL"[\s\S]*?author_user_id:\s*authData\.user\.id/);
 });
