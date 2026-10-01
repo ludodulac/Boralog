@@ -163,6 +163,7 @@ after insert or update of visibility
 on public.messages
 deferrable initially deferred
 for each row
+when (new.visibility = 'RESTRICTED')
 execute function private.boralog_restricted_message_requires_recipient();
 
 create constraint trigger boralog_restricted_message_recipient_delete_guard
