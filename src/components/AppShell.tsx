@@ -22,7 +22,7 @@ export function AppShell({ children, identity }: { children: React.ReactNode; id
   const isProjectCreationRoute = pathname === "/projets/nouveau";
   const isRealProjectRoute = pathname.startsWith("/projets/reel/");
   const isCalendarRoute = pathname === "/calendrier";
-  const isMessagesRoute = pathname === "/messages";
+  const isMessagesRoute = pathname === "/messages" || pathname.startsWith("/messages/");
   const showRequestedContent = pathname === "/moi" || isOnboardingRoute;
   const organizationName = identity.organization?.name ?? "Aucune structure";
 
