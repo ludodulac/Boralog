@@ -3,17 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "../../../../lib/supabase/server";
+import { parseProcessMessagePayload } from "./payload";
 import { initialProcessMessageState, type ProcessMessageState } from "./state";
-
-function readString(value: FormDataEntryValue | null) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function normalizeContents(values: FormDataEntryValue[]) {
-  return values
-    .filter((value): value is string => typeof value === "string")
-    .map((value) => value.trim().replace(/\r\n/g, "\n"));
-}
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -23,10 +14,17 @@ export async function processMessage(
   _previousState: ProcessMessageState = initialProcessMessageState,
   formData: FormData
 ): Promise<ProcessMessageState> {
-  const messageId = readString(formData.get("message_id"));
-  const resolution = readString(formData.get("resolution"));
-  const informationContents = normalizeContents(formData.getAll("information_contents"));
-  const taskContents = normalizeContents(formData.getAll("task_contents"));
+  const payload = parseProcessMessagePayload(formData);
+  if (!payload.ok) {
+    return { status: "error", message: payload.message };
+  }
+
+  const {
+    messageId,
+    resolution,
+    informationContents,
+    taskContents,
+  } = payload;
 
   if (!isUuid(messageId)) {
     return { status: "error", message: "Ce message n’est pas valide." };
