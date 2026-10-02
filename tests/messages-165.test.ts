@@ -38,6 +38,17 @@ test("BORALOG-165 supports multiple Information and Task drafts",()=>{
   assert.match(processForm,/name="task_contents"/);
 });
 
+test("BORALOG-165 pending state preserves consequence controls in FormData",()=>{
+  assert.match(processForm,/name="expected_information_count"/);
+  assert.match(processForm,/name="expected_task_count"/);
+  assert.match(processForm,/name="information_contents"[\s\S]*readOnly=\{pending\}/);
+  assert.match(processForm,/name="task_contents"[\s\S]*readOnly=\{pending\}/);
+  assert.doesNotMatch(processForm,/name="information_contents"[\s\S]{0,160}disabled=\{pending\}/);
+  assert.doesNotMatch(processForm,/name="task_contents"[\s\S]{0,160}disabled=\{pending\}/);
+  assert.match(processActions,/parseProcessMessagePayload\(formData\)/);
+});
+
+
 test("BORALOG-165 Sans suite is exclusive and clears consequence drafts",()=>{
   assert.match(processForm,/setNoFollowUp\(true\)/);
   assert.match(processForm,/setInformationFields\(\[\]\)/);
