@@ -6,7 +6,7 @@ const messagesPage = readFileSync("src/app/messages/page.tsx","utf8");
 const processPage = readFileSync("src/app/messages/[id]/traiter/page.tsx","utf8");
 const processForm = readFileSync("src/app/messages/[id]/traiter/ProcessMessageForm.tsx","utf8");
 const processActions = readFileSync("src/app/messages/[id]/traiter/actions.ts","utf8");
-const migration = readFileSync("supabase/migrations/20261001214500_message_processing_flow_165.sql","utf8");
+const migration = readFileSync("supabase/migrations/20261002052307_message_processing_flow_165.sql","utf8");
 
 test("BORALOG-165 Messages list shows only TO_PROCESS with Traiter action",()=>{
   assert.match(messagesPage,/\.eq\("status", "TO_PROCESS"\)/);
