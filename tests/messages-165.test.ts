@@ -7,6 +7,7 @@ const processPage = readFileSync("src/app/messages/[id]/traiter/page.tsx","utf8"
 const processForm = readFileSync("src/app/messages/[id]/traiter/ProcessMessageForm.tsx","utf8");
 const processActions = readFileSync("src/app/messages/[id]/traiter/actions.ts","utf8");
 const migration = readFileSync("supabase/migrations/20261002052307_message_processing_flow_165.sql","utf8");
+const appShell = readFileSync("src/components/AppShell.tsx","utf8");
 
 test("BORALOG-165 Messages list shows only TO_PROCESS with Traiter action",()=>{
   assert.match(messagesPage,/\.eq\("status", "TO_PROCESS"\)/);
@@ -67,4 +68,13 @@ test("BORALOG-165 keeps old no-follow-up RPC as a strict wrapper",()=>{
 test("BORALOG-165 adds no frontend service role",()=>{
   const combined=[messagesPage,processPage,processForm,processActions].join("\n");
   assert.doesNotMatch(combined,/SUPABASE_SERVICE_ROLE|service_role|serviceRole/);
+});
+
+
+test("BORALOG-165 AppShell renders nested Message processing routes",()=>{
+  assert.match(
+    appShell,
+    /pathname === "\/messages" \|\| pathname\.startsWith\("\/messages\/"\)/
+  );
+  assert.match(appShell,/isMessagesRoute \? children :/);
 });
