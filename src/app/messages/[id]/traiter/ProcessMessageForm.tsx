@@ -37,6 +37,8 @@ export function ProcessMessageForm({ messageId }: { messageId: string }) {
       name="resolution"
       value={noFollowUp ? "NO_FOLLOW_UP" : "CONSEQUENCES_CREATED"}
     />
+    <input type="hidden" name="expected_information_count" value={informationFields.length} />
+    <input type="hidden" name="expected_task_count" value={taskFields.length} />
 
     <section className="message-process-choice" aria-labelledby="message-process-question">
       <h2 id="message-process-question">Que faut-il en faire ?</h2>
@@ -69,7 +71,7 @@ export function ProcessMessageForm({ messageId }: { messageId: string }) {
           name="information_contents"
           rows={3}
           required
-          disabled={pending}
+          readOnly={pending}
         />
         <button
           type="button"
@@ -91,7 +93,7 @@ export function ProcessMessageForm({ messageId }: { messageId: string }) {
           name="task_contents"
           rows={3}
           required
-          disabled={pending}
+          readOnly={pending}
         />
         <button
           type="button"
