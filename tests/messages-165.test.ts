@@ -3,89 +3,69 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const messagesPage = readFileSync("src/app/messages/page.tsx","utf8");
-const processPage = readFileSync("src/app/messages/[id]/traiter/page.tsx","utf8");
-const processForm = readFileSync("src/app/messages/[id]/traiter/ProcessMessageForm.tsx","utf8");
-const processActions = readFileSync("src/app/messages/[id]/traiter/actions.ts","utf8");
-const migration = readFileSync("supabase/migrations/20261002052307_message_processing_flow_165.sql","utf8");
+const detailPage = readFileSync("src/app/messages/[id]/page.tsx","utf8");
+const detailActions = readFileSync("src/app/messages/[id]/actions.ts","utf8");
+const detailClient = readFileSync("src/app/messages/[id]/MessageDetailActions.tsx","utf8");
+const legacyRoute = readFileSync("src/app/messages/[id]/traiter/page.tsx","utf8");
+const legacyMigration = readFileSync("supabase/migrations/20261002052307_message_processing_flow_165.sql","utf8");
+const reconciliationMigration = readFileSync("supabase/migrations/20261003163000_message_cycle_reconciliation_165r.sql","utf8");
 const appShell = readFileSync("src/components/AppShell.tsx","utf8");
+const foundationWorkflow = readFileSync(".github/workflows/foundation-build.yml","utf8");
 
-test("BORALOG-165 Messages list shows only TO_PROCESS with Traiter action",()=>{
-  assert.match(messagesPage,/\.eq\("status", "TO_PROCESS"\)/);
-  assert.match(messagesPage,/href=\{\`\/messages\/\$\{message\.id\}\/traiter\`\}/);
-  assert.match(messagesPage,/>\s*Traiter\s*</);
+test("BORALOG-165R inbox defaults to all accessible statuses with simple filters",()=>{
+  assert.doesNotMatch(messagesPage,/\.eq\("status", "TO_PROCESS"\)[\s\S]*\.order\("created_at"/);
+  assert.match(messagesPage,/href="\/messages">Tous</);
+  assert.match(messagesPage,/href="\/messages\?etat=to-process">À traiter</);
+  assert.match(messagesPage,/href="\/messages\?etat=processed">Traités</);
+  assert.match(messagesPage,/message_notes/);
+  assert.match(messagesPage,/message\.id/);
 });
 
-test("BORALOG-165 dedicated route renders source read-only and the human choices",()=>{
-  assert.match(processPage,/Traiter ce message/);
-  assert.match(processPage,/Message source/);
-  assert.match(processPage,/message\.content/);
-  assert.match(processForm,/\+ Créer une information/);
-  assert.match(processForm,/\+ Créer une tâche/);
-  assert.match(processForm,/Sans suite/);
-  assert.match(processForm,/Terminer le traitement/);
+test("BORALOG-165R canonical detail route accepts both Message states",()=>{
+  assert.match(detailPage,/Fiche Message/);
+  assert.match(detailPage,/Source originale/);
+  assert.match(detailPage,/Notes/);
+  assert.doesNotMatch(detailPage,/\.eq\("status", "TO_PROCESS"\)/);
+  assert.doesNotMatch(detailPage,/\.eq\("status", "PROCESSED"\)/);
+  assert.match(detailPage,/MessageDetailActions/);
 });
 
-test("BORALOG-165 drafts stay client-side until the final atomic RPC",()=>{
-  assert.doesNotMatch(processForm,/\.rpc\(/);
-  assert.match(processActions,/\.rpc\("boralog_process_message"/);
-  assert.doesNotMatch(processActions,/boralog_create_information|boralog_create_task/);
+test("BORALOG-165R uses independent Note and status RPCs",()=>{
+  assert.match(detailActions,/\.rpc\("boralog_add_message_note"/);
+  assert.match(detailActions,/\.rpc\("boralog_set_message_status"/);
+  assert.doesNotMatch(detailActions,/boralog_process_message/);
+  assert.match(detailClient,/Marquer traité/);
+  assert.match(detailClient,/Remettre à traiter/);
 });
 
-test("BORALOG-165 supports multiple Information and Task drafts",()=>{
-  assert.match(processForm,/setInformationFields\(\(fields\) => \[\.\.\.fields, nextId\.current\+\+\]\)/);
-  assert.match(processForm,/setTaskFields\(\(fields\) => \[\.\.\.fields, nextId\.current\+\+\]\)/);
-  assert.match(processForm,/name="information_contents"/);
-  assert.match(processForm,/name="task_contents"/);
+test("BORALOG-165R Note content remains in FormData while pending",()=>{
+  assert.match(detailClient,/name="content"[\s\S]*readOnly=\{notePending\}/);
+  assert.doesNotMatch(detailClient,/name="content"[\s\S]{0,180}disabled=\{notePending\}/);
 });
 
-test("BORALOG-165 pending state preserves consequence controls in FormData",()=>{
-  assert.match(processForm,/name="expected_information_count"/);
-  assert.match(processForm,/name="expected_task_count"/);
-  assert.match(processForm,/name="information_contents"[\s\S]*readOnly=\{pending\}/);
-  assert.match(processForm,/name="task_contents"[\s\S]*readOnly=\{pending\}/);
-  assert.doesNotMatch(processForm,/name="information_contents"[\s\S]{0,160}disabled=\{pending\}/);
-  assert.doesNotMatch(processForm,/name="task_contents"[\s\S]{0,160}disabled=\{pending\}/);
-  assert.match(processActions,/parseProcessMessagePayload\(formData\)/);
+test("BORALOG-165R old traiter route redirects to canonical Message detail",()=>{
+  assert.match(legacyRoute,/redirect/);
+  assert.match(legacyRoute,/\/messages\//);
+  assert.doesNotMatch(legacyRoute,/ProcessMessageForm|boralog_process_message/);
 });
 
-
-test("BORALOG-165 Sans suite is exclusive and clears consequence drafts",()=>{
-  assert.match(processForm,/setNoFollowUp\(true\)/);
-  assert.match(processForm,/setInformationFields\(\[\]\)/);
-  assert.match(processForm,/setTaskFields\(\[\]\)/);
-  assert.match(processActions,/NO_FOLLOW_UP/);
-  assert.match(processActions,/Sans suite ne peut pas contenir de conséquence/);
+test("BORALOG-165R keeps migration 165 historical and supersedes append-only",()=>{
+  assert.match(legacyMigration,/processed message cannot be reopened/);
+  assert.match(reconciliationMigration,/create table public\.message_notes/);
+  assert.match(reconciliationMigration,/create table public\.message_status_history/);
+  assert.match(reconciliationMigration,/public\.boralog_add_message_note/);
+  assert.match(reconciliationMigration,/public\.boralog_set_message_status/);
+  assert.match(reconciliationMigration,/resolution = null/);
 });
 
-test("BORALOG-165 does not ask for a second Project or Date context",()=>{
-  assert.doesNotMatch(processForm,/project_id|event_id|Contexte facultatif|Choisir un projet|Choisir une date/);
-  assert.doesNotMatch(processActions,/p_project_id|p_event_id/);
+test("BORALOG-165R AppShell no longer maintains a product-route allowlist",()=>{
+  assert.doesNotMatch(appShell,/isMessagesRoute|isCalendarRoute|isRealProjectRoute|isProjectCreationRoute/);
+  assert.match(appShell,/\) : children\}/);
 });
 
-test("BORALOG-165 unified DB RPC inherits context and uses canonical consequences",()=>{
-  assert.match(migration,/public\.boralog_create_information/);
-  assert.match(migration,/public\.boralog_create_task/);
-  assert.match(migration,/v_message\.event_id/);
-  assert.match(migration,/v_message\.project_id/);
-  assert.match(migration,/array\[v_message\.id\]/);
-});
-
-test("BORALOG-165 keeps old no-follow-up RPC as a strict wrapper",()=>{
-  assert.match(migration,/create or replace function public\.boralog_close_message_no_follow_up/);
-  assert.match(migration,/public\.boralog_process_message/);
-  assert.match(migration,/'NO_FOLLOW_UP'/);
-});
-
-test("BORALOG-165 adds no frontend service role",()=>{
-  const combined=[messagesPage,processPage,processForm,processActions].join("\n");
-  assert.doesNotMatch(combined,/SUPABASE_SERVICE_ROLE|service_role|serviceRole/);
-});
-
-
-test("BORALOG-165 AppShell renders nested Message processing routes",()=>{
-  assert.match(
-    appShell,
-    /pathname === "\/messages" \|\| pathname\.startsWith\("\/messages\/"\)/
-  );
-  assert.match(appShell,/isMessagesRoute \? children :/);
+test("Foundation build runs test, lint and build",()=>{
+  assert.match(foundationWorkflow,/- run: npm test/);
+  assert.match(foundationWorkflow,/- run: npm run lint/);
+  assert.match(foundationWorkflow,/- run: npm run build/);
+  assert.match(foundationWorkflow,/message-cycle-browser\.mjs/);
 });

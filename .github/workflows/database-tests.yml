@@ -64,6 +64,7 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001163000_information_foundation_163.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261001173500_task_foundation_164.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261002052307_message_processing_flow_165.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/migrations/20261003163000_message_cycle_reconciliation_165r.sql
 
       - name: Run Boralog SQL tests
         shell: bash
@@ -82,3 +83,4 @@ jobs:
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/information_foundation.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/task_foundation.sql
           docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_processing_flow.sql
+          docker exec -i "${{ job.services.postgres.id }}" psql -U postgres -d boralog_test -v ON_ERROR_STOP=1 < supabase/tests/message_cycle_reconciliation.sql
