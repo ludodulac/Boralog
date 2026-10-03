@@ -393,7 +393,19 @@ begin
       and note.message_id=mid,
     ''
   );
-end $$;
+
+  select changed.* into legacy
+  from public.boralog_set_message_status(mid, 'TO_PROCESS') changed;
+
+  insert into _boralog_165r_results values (
+    'LEGACY_165_RESOLUTION_PRESERVED_ON_REOPEN',
+    legacy.status='TO_PROCESS'
+      and legacy.resolution='NO_FOLLOW_UP'
+      and legacy.processed_at is null
+      and legacy.processed_by is null,
+    coalesce(legacy.resolution, 'null')
+  );
+end $;
 
 -- Restricted audience itself is unchanged by status transition.
 reset role;

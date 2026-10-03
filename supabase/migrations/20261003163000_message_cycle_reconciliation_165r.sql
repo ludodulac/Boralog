@@ -8,19 +8,20 @@ alter table public.messages
   add constraint messages_processing_state_check
     check (
       (
-        status = 'TO_PROCESS'
-        and processed_at is null
-        and processed_by is null
-        and resolution is null
+        resolution is null
+        or resolution in ('NO_FOLLOW_UP', 'CONSEQUENCES_CREATED')
       )
-      or
-      (
-        status = 'PROCESSED'
-        and processed_at is not null
-        and processed_by is not null
-        and (
-          resolution is null
-          or resolution in ('NO_FOLLOW_UP', 'CONSEQUENCES_CREATED')
+      and (
+        (
+          status = 'TO_PROCESS'
+          and processed_at is null
+          and processed_by is null
+        )
+        or
+        (
+          status = 'PROCESSED'
+          and processed_at is not null
+          and processed_by is not null
         )
       )
     );
@@ -136,9 +137,8 @@ begin
        and (
          new.processed_at is not null
          or new.processed_by is not null
-         or new.resolution is not null
        ) then
-      raise exception 'to-process message cannot carry processing metadata'
+      raise exception 'to-process message cannot carry active processing metadata'
         using errcode = '23514';
     end if;
 
@@ -198,7 +198,8 @@ begin
 
   new.processed_at := null;
   new.processed_by := null;
-  new.resolution := null;
+  -- resolution is legacy 144/165 history: reopening must not erase it.
+  new.resolution := old.resolution;
   return new;
 end
 $$;
@@ -393,8 +394,7 @@ begin
   end if;
 
   update public.messages
-     set status = p_status,
-         resolution = null
+     set status = p_status
    where id = v_message.id
   returning * into v_message;
 

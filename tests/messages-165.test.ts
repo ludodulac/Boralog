@@ -55,7 +55,9 @@ test("BORALOG-165R keeps migration 165 historical and supersedes append-only",()
   assert.match(reconciliationMigration,/create table public\.message_status_history/);
   assert.match(reconciliationMigration,/public\.boralog_add_message_note/);
   assert.match(reconciliationMigration,/public\.boralog_set_message_status/);
-  assert.match(reconciliationMigration,/resolution = null/);
+  assert.match(reconciliationMigration,/resolution is legacy 144\/165 history/);
+  assert.doesNotMatch(reconciliationMigration,/set status = p_status,\s*resolution = null/);
+  assert.doesNotMatch(reconciliationMigration,/new\.resolution := null/);
 });
 
 test("BORALOG-165R AppShell no longer maintains a product-route allowlist",()=>{
