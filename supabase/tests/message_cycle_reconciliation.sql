@@ -396,6 +396,8 @@ begin
 end $$;
 
 -- Restricted audience itself is unchanged by status transition.
+reset role;
+
 do $$
 declare
   mid uuid := (select id from _boralog_165r_messages where name='restricted');

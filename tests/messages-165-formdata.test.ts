@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseProcessMessagePayload } from "../src/app/messages/[id]/traiter/payload.ts";
@@ -67,4 +68,16 @@ test("BORALOG-165 no-follow-up payload explicitly expects zero consequences", ()
   if (!payload.ok) return;
   assert.deepEqual(payload.informationContents, []);
   assert.deepEqual(payload.taskContents, []);
+});
+
+
+test("BORALOG-165R Message form never disables pending values that must reach FormData", () => {
+  const source = fs.readFileSync("src/app/messages/CreateMessageForm.tsx", "utf8");
+
+  assert.match(source, /name="content"[\s\S]*?readOnly=\{pending\}/);
+  assert.doesNotMatch(source, /name="content"[\s\S]{0,180}?disabled=\{pending\}/);
+  assert.doesNotMatch(source, /name="recipient_user_ids"[\s\S]{0,180}?disabled=\{pending\}/);
+  assert.doesNotMatch(source, /name="context_mode"[\s\S]{0,220}?disabled=\{pending\}/);
+  assert.doesNotMatch(source, /name="project_id"[\s\S]{0,160}?disabled=\{pending\}/);
+  assert.doesNotMatch(source, /name="event_id"[\s\S]{0,160}?disabled=\{pending\}/);
 });
