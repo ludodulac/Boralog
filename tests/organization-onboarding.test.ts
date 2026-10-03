@@ -58,18 +58,17 @@ test("existing membership redirects away from first-organization creation", () =
   assert.match(source, /if \(identity\.organization\) redirect\("\/"\)/);
 });
 
-test("real organization boundary does not render demo fixtures", () => {
+test("real organization boundary stays structural and does not render demo fixtures", () => {
   const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
   assert.doesNotMatch(shell, /demoToday|demoProjects|src\/data\/demo/);
-  assert.match(shell, /Aucun projet pour le moment/);
-  assert.match(shell, /identity\.organization\.name/);
+  assert.match(shell, /identity\.organization\?\.name/);
+  assert.match(shell, /\) : children\}/);
 });
 
-test("calendar and Messages routes render their requested child for an existing organization", () => {
+test("normal product routes render their own child without a manual route allowlist", () => {
   const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
-  assert.match(shell, /const isCalendarRoute = pathname === "\/calendrier"/);
-  assert.match(shell, /const isMessagesRoute = pathname === "\/messages"/);
-  assert.match(shell, /isProjectCreationRoute \|\| isRealProjectRoute \|\| isCalendarRoute \|\| isMessagesRoute \? children/);
+  assert.doesNotMatch(shell, /isCalendarRoute|isMessagesRoute|isProjectCreationRoute|isRealProjectRoute/);
+  assert.match(shell, /\) : children\}/);
 });
 
 test("no-organization UX exposes creation CTA", () => {
@@ -78,10 +77,10 @@ test("no-organization UX exposes creation CTA", () => {
   assert.match(shell, /href="\/organisations\/nouvelle"/);
 });
 
-test("real organization empty state exposes first project CTA", () => {
-  const shell = fs.readFileSync("src/components/AppShell.tsx", "utf8");
-  assert.match(shell, /href="\/projets\/nouveau"/);
-  assert.match(shell, /Créer un projet/);
+test("real organization home exposes first project CTA", () => {
+  const home = fs.readFileSync("src/app/page.tsx", "utf8");
+  assert.match(home, /href="\/projets\/nouveau"/);
+  assert.match(home, /Créer un projet/);
 });
 
 test("project creation UI slice is extracted and deliberately write-free", () => {

@@ -1,15 +1,16 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { createClient } from "../../../lib/supabase/server";
-import {
-  initialAddMessageNoteState,
-  initialMessageStatusState,
-  type AddMessageNoteState,
-  type MessageStatusState,
-} from "./state";
-
 type MessageStatus = "TO_PROCESS" | "PROCESSED";
+
+type AddMessageNoteState =
+  | { status: "idle"; message: ""; values: { content: string } }
+  | { status: "error"; message: string; values: { content: string } }
+  | { status: "success"; message: string; values: { content: string } };
+
+type MessageStatusState =
+  | { status: "idle"; message: "" }
+  | { status: "error"; message: string }
+  | { status: "success"; message: string };
 
 type ActionRpcClient = {
   rpc: (
@@ -36,17 +37,20 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-async function resolveClient(dependencies?: ActionDependencies) {
+async function resolveClient(dependencies?: ActionDependencies): Promise<ActionRpcClient> {
   if (dependencies?.client) return dependencies.client;
+  const { createClient } = await import("../../../lib/supabase/server");
   return await createClient() as unknown as ActionRpcClient;
 }
 
-function resolveRevalidate(dependencies?: ActionDependencies) {
-  return dependencies?.revalidate ?? revalidatePath;
+async function resolveRevalidate(dependencies?: ActionDependencies) {
+  if (dependencies?.revalidate) return dependencies.revalidate;
+  const { revalidatePath } = await import("next/cache");
+  return revalidatePath;
 }
 
 export async function addMessageNote(
-  _previousState: AddMessageNoteState = initialAddMessageNoteState,
+  _previousState: AddMessageNoteState = { status: "idle", message: "", values: { content: "" } },
   formData: FormData,
   dependencies?: ActionDependencies
 ): Promise<AddMessageNoteState> {
@@ -76,7 +80,7 @@ export async function addMessageNote(
     };
   }
 
-  const revalidate = resolveRevalidate(dependencies);
+  const revalidate = await resolveRevalidate(dependencies);
   revalidate(`/messages/${messageId}`);
   revalidate("/messages");
 
@@ -88,7 +92,7 @@ export async function addMessageNote(
 }
 
 export async function setMessageStatus(
-  _previousState: MessageStatusState = initialMessageStatusState,
+  _previousState: MessageStatusState = { status: "idle", message: "" },
   formData: FormData,
   dependencies?: ActionDependencies
 ): Promise<MessageStatusState> {
@@ -116,7 +120,7 @@ export async function setMessageStatus(
     };
   }
 
-  const revalidate = resolveRevalidate(dependencies);
+  const revalidate = await resolveRevalidate(dependencies);
   revalidate(`/messages/${messageId}`);
   revalidate("/messages");
 
