@@ -405,7 +405,7 @@ begin
       and legacy.processed_by is null,
     coalesce(legacy.resolution, 'null')
   );
-end $;
+end $$;
 
 -- Restricted audience itself is unchanged by status transition.
 reset role;
