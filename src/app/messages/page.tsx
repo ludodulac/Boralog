@@ -87,7 +87,7 @@ export default async function MessagesPage({
         .from("message_notes")
         .select("message_id")
         .in("message_id", messageIds)
-    : { data: [] as { message_id: string }[], error: null };
+    : { data: [] as { message_id: string }[] };
 
   const noteCounts = new Map<string, number>();
   for (const note of noteRows ?? []) {
