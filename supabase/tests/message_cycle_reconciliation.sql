@@ -114,6 +114,8 @@ select
 from public.messages
 where id=(select id from _boralog_165r_messages where name='cycle');
 
+reset role;
+
 create temporary table _boralog_165r_restricted_snapshot on commit drop as
 select
   m.id,
@@ -123,6 +125,11 @@ from public.messages m
 left join public.message_recipients r on r.message_id=m.id
 where m.id=(select id from _boralog_165r_messages where name='restricted')
 group by m.id,m.visibility;
+
+grant select on _boralog_165r_restricted_snapshot to authenticated;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub','16510000-0000-4000-8000-000000000001',true);
 
 -- Valid Note, actor attribution and no implicit status transition.
 do $$
