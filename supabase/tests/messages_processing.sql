@@ -289,8 +289,8 @@ begin
   where id=v_id;
 
   insert into _boralog_144_results values (
-    'DIRECT_REOPEN_DENIED',
-    v_denied and v_status='PROCESSED',
+    'DIRECT_REOPEN_SUPERSEDED_BY_165R',
+    not v_denied and v_status='TO_PROCESS',
     'denied='||v_denied
   );
 end $$;
@@ -324,8 +324,8 @@ begin
   where id=v_id;
 
   insert into _boralog_144_results values (
-    'PROCESSED_WITHOUT_RESOLUTION_DENIED',
-    v_denied and v_status='TO_PROCESS',
+    'PROCESSED_WITHOUT_LEGACY_RESOLUTION_ALLOWED_165R',
+    not v_denied and v_status='PROCESSED',
     'denied='||v_denied
   );
 end $$;

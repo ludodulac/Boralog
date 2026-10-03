@@ -53,11 +53,9 @@ export function CreateMessageForm({
   useEffect(() => {
     if (state.status === "success") {
       formRef.current?.reset();
-      setVisibility(initialVisibility);
-      setContextMode("NONE");
       router.refresh();
     }
-  }, [initialVisibility, router, state]);
+  }, [router, state.status]);
 
   return <form ref={formRef} className="project-create-form" action={action} aria-busy={pending}>
     <label htmlFor="message-content">Message
@@ -66,7 +64,7 @@ export function CreateMessageForm({
         name="content"
         rows={5}
         required
-        disabled={pending}
+        readOnly={pending}
         defaultValue={state.values.content}
       />
     </label>
@@ -82,8 +80,7 @@ export function CreateMessageForm({
           checked={visibility === "ORGANIZATION"}
           onChange={() => setVisibility("ORGANIZATION")}
           disabled={
-            pending
-            || !canCreateOrganization
+            !canCreateOrganization
             || (organizationRequiresContext && contextMode === "NONE")
           }
         />
@@ -97,7 +94,7 @@ export function CreateMessageForm({
           value="RESTRICTED"
           checked={visibility === "RESTRICTED"}
           onChange={() => setVisibility("RESTRICTED")}
-          disabled={pending || !canCreateRestricted}
+          disabled={!canCreateRestricted}
         />
         <span>Personnes choisies</span>
       </label>
@@ -116,7 +113,6 @@ export function CreateMessageForm({
                   type="checkbox"
                   name="recipient_user_ids"
                   value={recipient.user_id}
-                  disabled={pending}
                 />
                 <span>{recipient.display_name || "Membre"}</span>
               </label>
@@ -136,7 +132,6 @@ export function CreateMessageForm({
           value="NONE"
           checked={contextMode === "NONE"}
           onChange={() => setContextMode("NONE")}
-          disabled={pending}
         />
         <span>Aucun</span>
       </label>
@@ -148,7 +143,7 @@ export function CreateMessageForm({
           value="PROJECT"
           checked={contextMode === "PROJECT"}
           onChange={() => setContextMode("PROJECT")}
-          disabled={pending || projects.length === 0}
+          disabled={projects.length === 0}
         />
         <span>Projet</span>
       </label>
@@ -160,7 +155,7 @@ export function CreateMessageForm({
           value="DATE"
           checked={contextMode === "DATE"}
           onChange={() => setContextMode("DATE")}
-          disabled={pending || dates.length === 0}
+          disabled={dates.length === 0}
         />
         <span>Date</span>
       </label>
@@ -168,7 +163,7 @@ export function CreateMessageForm({
 
     {contextMode === "PROJECT" && (
       <label htmlFor="message-project">Projet
-        <select id="message-project" name="project_id" required disabled={pending} defaultValue="">
+        <select id="message-project" name="project_id" required defaultValue="">
           <option value="" disabled>Choisir un projet</option>
           {projects.map((project) => (
             <option key={project.id} value={project.id}>{project.name}</option>
@@ -179,7 +174,7 @@ export function CreateMessageForm({
 
     {contextMode === "DATE" && (
       <label htmlFor="message-date">Date
-        <select id="message-date" name="event_id" required disabled={pending} defaultValue="">
+        <select id="message-date" name="event_id" required defaultValue="">
           <option value="" disabled>Choisir une date</option>
           {dates.map((date) => (
             <option key={date.id} value={date.id}>{date.label}</option>
