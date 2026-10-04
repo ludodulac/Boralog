@@ -165,7 +165,7 @@ begin
 end $$;
 
 -- Canonical reversible status cycle and Note while PROCESSED.
-do $
+do $$
 declare
   mid uuid := (select id from _boralog_165r_messages where name='cycle');
   processed public.messages%rowtype;
@@ -241,7 +241,7 @@ begin
       ),
       ''
     );
-end $;
+end $$;
 
 -- Source, provenance, context and audience stay unchanged through the cycle.
 do $$
