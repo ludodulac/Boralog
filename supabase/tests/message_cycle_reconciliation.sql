@@ -165,12 +165,15 @@ begin
 end $$;
 
 -- Canonical reversible status cycle and Note while PROCESSED.
-do $$
+do $
 declare
   mid uuid := (select id from _boralog_165r_messages where name='cycle');
   processed public.messages%rowtype;
   reopened public.messages%rowtype;
-  transition_path text;
+  transition_count bigint;
+  to_processed_count bigint;
+  to_process_count bigint;
+  attributed_count bigint;
 begin
   select changed.* into processed
   from public.boralog_set_message_status(mid, 'PROCESSED') changed;
@@ -180,11 +183,25 @@ begin
   select changed.* into reopened
   from public.boralog_set_message_status(mid, 'TO_PROCESS') changed;
 
-  select string_agg(
-    history.from_status || '>' || history.to_status,
-    ',' order by history.changed_at, history.id
-  )
-  into transition_path
+  select
+    count(*),
+    count(*) filter (
+      where history.from_status='TO_PROCESS'
+        and history.to_status='PROCESSED'
+    ),
+    count(*) filter (
+      where history.from_status='PROCESSED'
+        and history.to_status='TO_PROCESS'
+    ),
+    count(*) filter (
+      where history.changed_by=auth.uid()
+        and history.changed_at is not null
+    )
+  into
+    transition_count,
+    to_processed_count,
+    to_process_count,
+    attributed_count
   from public.message_status_history history
   where history.message_id=mid;
 
@@ -207,13 +224,14 @@ begin
     ),
     (
       'STATUS_HISTORY_EXACT_TWO_TRANSITIONS',
-      transition_path='TO_PROCESS>PROCESSED,PROCESSED>TO_PROCESS'
-        and (
-          select count(*)
-          from public.message_status_history history
-          where history.message_id=mid
-        )=2,
-      coalesce(transition_path,'null')
+      transition_count=2
+        and to_processed_count=1
+        and to_process_count=1
+        and attributed_count=2,
+      'total='||transition_count
+        ||', to_processed='||to_processed_count
+        ||', to_process='||to_process_count
+        ||', attributed='||attributed_count
     ),
     (
       'NOTE_ALLOWED_WHILE_PROCESSED',
@@ -223,7 +241,7 @@ begin
       ),
       ''
     );
-end $$;
+end $;
 
 -- Source, provenance, context and audience stay unchanged through the cycle.
 do $$
