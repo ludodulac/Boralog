@@ -1,0 +1,161 @@
+name: Boralog scaffold 167A People migration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boralog-167a-people-migration-scaffold
+  cancel-in-progress: false
+
+jobs:
+  scaffold:
+    name: Scaffold BORALOG-167A People migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      FOUNDATION_SOURCE_BRANCH: build/foundation-v001
+      EXPECTED_FOUNDATION_HEAD: "8ca9d1c3662386f2a7fc81913e10ad2f4582058c"
+      TARGET_BRANCH: feat/boralog-167a-people-foundation
+      MIGRATION_NAME: people_foundation_167a
+
+    steps:
+      - name: Guard dispatch source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test "${GITHUB_EVENT_NAME}" = "workflow_dispatch"
+          test "${GITHUB_REF}" = "refs/heads/main"
+
+      - name: Check out verified Foundation source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: build/foundation-v001
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Verify Foundation HEAD
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          source_head="$(git rev-parse HEAD)"
+          echo "SOURCE_HEAD=${source_head}"
+
+          if [ "${source_head}" != "${EXPECTED_FOUNDATION_HEAD}" ]; then
+            echo "::error::Foundation HEAD mismatch. Expected ${EXPECTED_FOUNDATION_HEAD}, got ${source_head}."
+            exit 1
+          fi
+
+      - name: Guard target branch and migration absence
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          remote_target="$(git ls-remote --heads origin "refs/heads/${TARGET_BRANCH}")"
+          if [ -n "${remote_target}" ]; then
+            echo "::error::Target branch ${TARGET_BRANCH} already exists remotely."
+            exit 1
+          fi
+
+          existing_files="$(find supabase/migrations -maxdepth 1 -type f -name '*_people_foundation_167a.sql' -print)"
+          if [ -n "${existing_files}" ]; then
+            echo "::error::A people_foundation_167a migration already exists."
+            printf '%s\n' "${existing_files}"
+            exit 1
+          fi
+
+      - name: Install official Supabase CLI
+        uses: supabase/setup-cli@3c2f5e2ae34c34e428e8e206e2c4d21fa2d20fbf # v2.1.1
+        with:
+          version: latest
+
+      - name: Generate canonical migration scaffold
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          supabase migration new people_foundation_167a
+
+          mapfile -t generated_files < <(
+            find supabase/migrations -maxdepth 1 -type f -name '*_people_foundation_167a.sql' -print | sort
+          )
+
+          if [ "${#generated_files[@]}" -ne 1 ]; then
+            echo "::error::Expected exactly one generated people_foundation_167a migration file."
+            printf 'Detected files: %s\n' "${generated_files[*]:-none}"
+            exit 1
+          fi
+
+          generated_file="${generated_files[0]}"
+          generated_basename="$(basename "${generated_file}")"
+
+          if [[ ! "${generated_basename}" =~ ^([0-9]{14})_people_foundation_167a\.sql$ ]]; then
+            echo "::error::Generated migration filename does not match the canonical 14-digit timestamp format."
+            exit 1
+          fi
+
+          generated_version="${BASH_REMATCH[1]}"
+
+          if [ -s "${generated_file}" ]; then
+            echo "::error::Generated migration scaffold is not empty."
+            exit 1
+          fi
+
+          printf 'GENERATED_MIGRATION_FILE=%s\n' "${generated_file}" >> "${GITHUB_ENV}"
+          printf 'GENERATED_MIGRATION_VERSION=%s\n' "${generated_version}" >> "${GITHUB_ENV}"
+
+      - name: Verify generated file is the only repository change
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t changed_files < <(
+            git status --porcelain --untracked-files=all | sed -E 's/^...//' | sort
+          )
+
+          if [ "${#changed_files[@]}" -ne 1 ] || [ "${changed_files[0]}" != "${GENERATED_MIGRATION_FILE}" ]; then
+            echo "::error::Scaffold must create exactly one repository file."
+            printf 'Detected changes: %s\n' "${changed_files[*]:-none}"
+            exit 1
+          fi
+
+      - name: Create target branch, commit scaffold, and push
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git switch -c "${TARGET_BRANCH}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -- "${GENERATED_MIGRATION_FILE}"
+
+          mapfile -t staged_files < <(git diff --cached --name-only)
+          if [ "${#staged_files[@]}" -ne 1 ] || [ "${staged_files[0]}" != "${GENERATED_MIGRATION_FILE}" ]; then
+            echo "::error::Commit scope is not exactly the generated migration scaffold."
+            exit 1
+          fi
+
+          git commit -m "chore: scaffold BORALOG-167A people migration"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+
+          target_head="$(git rev-parse HEAD)"
+          printf 'TARGET_HEAD=%s\n' "${target_head}" >> "${GITHUB_ENV}"
+
+      - name: Write scaffold summary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          {
+            echo "GENERATED_MIGRATION_FILE=${GENERATED_MIGRATION_FILE}"
+            echo "GENERATED_MIGRATION_VERSION=${GENERATED_MIGRATION_VERSION}"
+            echo "TARGET_BRANCH=${TARGET_BRANCH}"
+            echo "TARGET_HEAD=${TARGET_HEAD}"
+          } >> "${GITHUB_STEP_SUMMARY}"
