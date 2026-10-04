@@ -8,7 +8,7 @@ const detailActions = readFileSync("src/app/messages/[id]/actions.ts","utf8");
 const detailClient = readFileSync("src/app/messages/[id]/MessageDetailActions.tsx","utf8");
 const legacyRoute = readFileSync("src/app/messages/[id]/traiter/page.tsx","utf8");
 const legacyMigration = readFileSync("supabase/migrations/20261002052307_message_processing_flow_165.sql","utf8");
-const reconciliationMigration = readFileSync("supabase/migrations/20261003163000_message_cycle_reconciliation_165r.sql","utf8");
+const reconciliationMigration = readFileSync("supabase/migrations/20261004065450_message_cycle_reconciliation_165r.sql","utf8");
 const appShell = readFileSync("src/components/AppShell.tsx","utf8");
 const foundationWorkflow = readFileSync(".github/workflows/foundation-build.yml","utf8");
 
