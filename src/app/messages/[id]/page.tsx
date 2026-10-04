@@ -1,14 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { formatBoralogDateTime } from "../../../lib/date-time";
 import { createClient } from "../../../lib/supabase/server";
 import { MessageDetailActions } from "./MessageDetailActions";
-
-function displayDateTime(value: string) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function displayBusinessDate(value: string) {
   const [year, month, day] = value.split("-");
@@ -112,7 +106,7 @@ export default async function MessageDetailPage({
       <div className="message-source-meta">
         <span>{displaySourceKind(message.source_kind)}</span>
         {sourceAuthor && <span>{sourceAuthor}</span>}
-        <time dateTime={sourceDate}>{displayDateTime(sourceDate)}</time>
+        <time dateTime={sourceDate}>{formatBoralogDateTime(sourceDate)}</time>
       </div>
     </section>
 
@@ -141,7 +135,7 @@ export default async function MessageDetailPage({
               <small>
                 {note.created_by === authData.user.id ? "Vous" : "Membre"}
                 {" · "}
-                <time dateTime={note.created_at}>{displayDateTime(note.created_at)}</time>
+                <time dateTime={note.created_at}>{formatBoralogDateTime(note.created_at)}</time>
               </small>
             </article>
           ))}

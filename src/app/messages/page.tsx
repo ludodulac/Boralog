@@ -1,17 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentIdentity } from "../../lib/auth";
+import { formatBoralogDateTime } from "../../lib/date-time";
 import { createClient } from "../../lib/supabase/server";
 import { CreateMessageForm } from "./CreateMessageForm";
 
 type MessageFilter = "all" | "to-process" | "processed";
-
-function displayCreatedAt(value: string) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 function displayBusinessDate(value: string) {
   const [year, month, day] = value.split("-");
@@ -183,7 +177,7 @@ export default async function MessagesPage({
               <strong>{previewContent(message.content)}</strong>
               <small>
                 {projectName ? `${projectName} · ` : ""}
-                {displayCreatedAt(message.created_at)}
+                {formatBoralogDateTime(message.created_at, "short")}
                 {" · "}
                 {noteCount} note{noteCount > 1 ? "s" : ""}
               </small>
