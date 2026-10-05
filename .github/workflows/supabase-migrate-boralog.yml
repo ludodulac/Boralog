@@ -7,7 +7,7 @@ on:
         description: "Migration operation"
         required: true
         type: choice
-        default: apply
+        default: check
         options:
           - check
           - apply
