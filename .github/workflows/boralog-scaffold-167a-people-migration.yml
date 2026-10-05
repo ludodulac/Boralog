@@ -114,6 +114,9 @@ jobs:
         run: |
           set -euo pipefail
 
+          rm -f supabase/.temp/cli-latest
+          rmdir supabase/.temp 2>/dev/null || true
+
           mapfile -t changed_files < <(
             git status --porcelain --untracked-files=all | sed -E 's/^...//' | sort
           )
