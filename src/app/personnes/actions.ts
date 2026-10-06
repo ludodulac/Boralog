@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getCurrentIdentity } from "../../lib/auth";
 import { createClient } from "../../lib/supabase/server";
 import { initialPersonFormState, type PersonFormState } from "./state";
 
@@ -24,28 +25,23 @@ function isUuid(value: string) {
 }
 
 async function getActorContext() {
-  const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) return { ok: false as const, message: "Votre session n’est plus valide." };
-
-  const { data: memberships, error: membershipError } = await supabase
-    .from("organization_memberships")
-    .select("organization_id, access_level")
-    .eq("user_id", authData.user.id)
-    .eq("status", "active")
-    .in("access_level", ["owner", "full"])
-    .limit(1);
-
-  const membership = memberships?.[0];
-  if (membershipError || !membership) {
+  const identity = await getCurrentIdentity();
+  if (!identity.userId) {
+    return { ok: false as const, message: "Votre session n’est plus valide." };
+  }
+  if (
+    !identity.organization
+    || (identity.organization.accessLevel !== "owner" && identity.organization.accessLevel !== "full")
+  ) {
     return { ok: false as const, message: "Vous n’avez pas accès à la gestion des Personnes." };
   }
 
+  const supabase = await createClient();
   return {
     ok: true as const,
     supabase,
-    userId: authData.user.id,
-    organizationId: membership.organization_id as string,
+    userId: identity.userId,
+    organizationId: identity.organization.id,
   };
 }
 
