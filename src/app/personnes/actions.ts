@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "../../lib/supabase/server";
-import { initialPersonPersonFormState, type PersonPersonFormState } from "./state";
+import { initialPersonFormState, type PersonFormState } from "./state";
 
 function readString(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -64,7 +64,7 @@ async function personBelongsToOrganization(
 }
 
 export async function createPerson(
-  _previousState: PersonFormState = initialPersonPersonFormState,
+  _previousState: PersonFormState = initialPersonFormState,
   formData: FormData,
 ): Promise<PersonFormState> {
   const name = readString(formData.get("name")).replace(/\s+/g, " ");
@@ -104,7 +104,7 @@ export async function createPerson(
 }
 
 export async function updatePerson(
-  _previousState: PersonFormState = initialPersonPersonFormState,
+  _previousState: PersonFormState = initialPersonFormState,
   formData: FormData,
 ): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
@@ -148,7 +148,7 @@ export async function updatePerson(
 }
 
 export async function setPersonCompany(
-  _previousState: PersonFormState = initialPersonPersonFormState,
+  _previousState: PersonFormState = initialPersonFormState,
   formData: FormData,
 ): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
@@ -187,7 +187,7 @@ export async function setPersonCompany(
 }
 
 export async function createCompanyForPerson(
-  _previousState: PersonFormState = initialPersonPersonFormState,
+  _previousState: PersonFormState = initialPersonFormState,
   formData: FormData,
 ): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
@@ -228,7 +228,7 @@ export async function createCompanyForPerson(
 }
 
 export async function setPersonMembership(
-  _previousState: PersonFormState = initialPersonPersonFormState,
+  _previousState: PersonFormState = initialPersonFormState,
   formData: FormData,
 ): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
