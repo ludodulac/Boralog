@@ -28,9 +28,9 @@ jobs:
     env:
       EXPECTED_PROJECT_REF: jwtawyeuyvqjikjvfhri
       FOUNDATION_SOURCE_BRANCH: build/foundation-v001
-      EXPECTED_FOUNDATION_HEAD: "da7fbf40da7bbe38b94501958282944a8abdcf82"
-      EXPECTED_MIGRATION_VERSION: "20261005122502"
-      EXPECTED_MIGRATION_FILE: supabase/migrations/20261005122502_person_companies_foundation_168b.sql
+      EXPECTED_FOUNDATION_HEAD: "12973c593c257a105c6db77533c58e0974e2b3de"
+      EXPECTED_MIGRATION_VERSION: "20261005220936"
+      EXPECTED_MIGRATION_FILE: supabase/migrations/20261005220936_people_membership_link_169b.sql
 
     steps:
       - name: Guard control-plane dispatch
@@ -45,7 +45,7 @@ jobs:
           test "${GITHUB_REF}" = "refs/heads/main"
           test "${EXPECTED_PROJECT_REF}" = "jwtawyeuyvqjikjvfhri"
           test "${FOUNDATION_SOURCE_BRANCH}" = "build/foundation-v001"
-          test "${EXPECTED_MIGRATION_VERSION}" = "20261005122502"
+          test "${EXPECTED_MIGRATION_VERSION}" = "20261005220936"
 
       - name: Check out Foundation migration source
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -169,7 +169,7 @@ jobs:
             exit "${list_status}"
           fi
 
-      - name: Dry-run and enforce BORALOG-168B only
+      - name: Dry-run and enforce BORALOG-169B only
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
