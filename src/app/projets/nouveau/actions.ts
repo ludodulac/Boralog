@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getCurrentIdentity } from "../../../lib/auth";
 import { createClient } from "../../../lib/supabase/server";
 import { initialCreateProjectState, type CreateProjectState } from "./state";
 
@@ -35,25 +36,22 @@ export async function createProject(
   const attemptId = String(formData.get("attempt_id") ?? "");
   if (!isUuid(attemptId)) return { status: "error", message: "Cette tentative de création n’est plus valide. Rechargez la page puis réessayez.", values: submitted };
 
+  const identity = await getCurrentIdentity();
+  if (!identity.userId) return { status: "error", message: "Votre session n’est plus valide. Reconnectez-vous puis réessayez.", values: submitted };
+  if (
+    !identity.organization
+    || (identity.organization.accessLevel !== "owner" && identity.organization.accessLevel !== "full")
+  ) {
+    return { status: "error", message: "Vous n’avez pas les droits nécessaires pour créer un projet dans cette structure.", values: submitted };
+  }
+
   const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) return { status: "error", message: "Votre session n’est plus valide. Reconnectez-vous puis réessayez.", values: submitted };
-
-  const { data: memberships, error: membershipError } = await supabase
-    .from("organization_memberships")
-    .select("organization_id, access_level")
-    .eq("user_id", authData.user.id)
-    .eq("status", "active")
-    .in("access_level", ["owner", "full"])
-    .limit(1);
-
-  const membership = memberships?.[0];
-  if (membershipError || !membership) return { status: "error", message: "Vous n’avez pas les droits nécessaires pour créer un projet dans cette structure.", values: submitted };
 
   const { data: existing, error: existingError } = await supabase
     .from("projects")
     .select("id")
     .eq("id", attemptId)
+    .eq("organization_id", identity.organization.id)
     .maybeSingle();
   if (!existingError && existing) {
     revalidatePath("/", "layout");
@@ -64,14 +62,14 @@ export async function createProject(
     .from("projects")
     .insert({
       id: attemptId,
-      organization_id: membership.organization_id,
+      organization_id: identity.organization.id,
       name: parsedName.value,
       description,
-      created_by: authData.user.id,
+      created_by: identity.userId,
     });
 
   if (error) {
-    const { data: recovered } = await supabase.from("projects").select("id").eq("id", attemptId).maybeSingle();
+    const { data: recovered } = await supabase.from("projects").select("id").eq("id", attemptId).eq("organization_id", identity.organization.id).maybeSingle();
     if (!recovered) return { status: "error", message: "Le projet n’a pas pu être créé. Vérifiez votre connexion puis réessayez.", values: submitted };
   }
 
