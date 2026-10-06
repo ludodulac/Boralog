@@ -39,8 +39,15 @@ test("BORALOG-170B account linking only accepts active same-organization members
   assert.match(peopleActions, /organization_membership_id: nextMembershipId/);
 });
 
+test("BORALOG-170B Person actions reuse the canonical current organization", () => {
+  assert.match(peopleActions, /getCurrentIdentity/);
+  assert.match(peopleActions, /identity\.organization\.id/);
+  assert.match(peopleActions, /userId: identity\.userId/);
+  assert.match(peopleActions, /identity\.organization\.accessLevel !== "owner"[\s\S]*identity\.organization\.accessLevel !== "full"/);
+  assert.doesNotMatch(peopleActions, /\.from\("organization_memberships"\)[\s\S]{0,400}\.in\("access_level", \["owner", "full"\]\)[\s\S]{0,120}\.limit\(1\)/);
+});
+
 test("BORALOG-170B keeps LIMITED outside Person management", () => {
-  assert.match(peopleActions, /\.in\("access_level", \["owner", "full"\]\)/);
   assert.match(peopleList, /accessLevel === "owner"[\s\S]*accessLevel === "full"/);
   assert.match(personDetail, /accessLevel === "owner"[\s\S]*accessLevel === "full"/);
 });
