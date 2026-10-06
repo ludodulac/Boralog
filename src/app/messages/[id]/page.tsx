@@ -68,13 +68,54 @@ export default async function MessageDetailPage({
       : Promise.resolve({ data: null, error: null }),
   ]);
 
+  let businessPerson: { id: string; name: string } | null = null;
+  let businessCompanies: string[] = [];
+
+  if (message.origin_type === "INTERNAL" && message.author_user_id) {
+    const { data: authorMembership } = await supabase
+      .from("organization_memberships")
+      .select("id")
+      .eq("organization_id", message.organization_id)
+      .eq("user_id", message.author_user_id)
+      .maybeSingle();
+
+    if (authorMembership) {
+      const { data: person } = await supabase
+        .from("people")
+        .select("id, name")
+        .eq("organization_id", message.organization_id)
+        .eq("organization_membership_id", authorMembership.id)
+        .maybeSingle();
+
+      if (person) {
+        businessPerson = person;
+        const { data: companyLinks } = await supabase
+          .from("person_companies")
+          .select("company_id")
+          .eq("person_id", person.id);
+        const companyIds = [...new Set((companyLinks ?? []).map((link) => link.company_id))];
+        if (companyIds.length > 0) {
+          const { data: companies } = await supabase
+            .from("companies")
+            .select("id, name")
+            .in("id", companyIds)
+            .order("name", { ascending: true });
+          businessCompanies = (companies ?? []).map((company) => company.name);
+        }
+      }
+    }
+  }
+
   const project = projectResult.data;
   const event = eventResult.data;
   const status = message.status === "PROCESSED" ? "PROCESSED" : "TO_PROCESS";
-  const sourceAuthor =
-    message.external_author_label
-    || authorProfile?.display_name
-    || (message.author_user_id === authData.user.id ? "Vous" : null);
+  const sourceAuthor = message.origin_type === "INTERNAL"
+    ? businessPerson?.name
+      || authorProfile?.display_name
+      || (message.author_user_id === authData.user.id ? "Vous" : null)
+    : message.external_author_label
+      || authorProfile?.display_name
+      || (message.author_user_id === authData.user.id ? "Vous" : null);
   const sourceDate = message.source_occurred_at || message.created_at;
   const contextParts = [
     project?.name || null,
@@ -106,6 +147,7 @@ export default async function MessageDetailPage({
       <div className="message-source-meta">
         <span>{displaySourceKind(message.source_kind)}</span>
         {sourceAuthor && <span>{sourceAuthor}</span>}
+        {message.origin_type === "INTERNAL" && businessCompanies.length > 0 && <span>{businessCompanies.join(" · ")}</span>}
         <time dateTime={sourceDate}>{formatBoralogDateTime(sourceDate)}</time>
       </div>
     </section>
