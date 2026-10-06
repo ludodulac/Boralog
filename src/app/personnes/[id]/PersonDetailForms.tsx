@@ -4,11 +4,11 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   createCompanyForPerson,
-  initialPersonFormState,
   setPersonCompany,
   setPersonMembership,
   updatePerson,
 } from "../actions";
+import { initialPersonFormState } from "../state";
 
 function RefreshOnSuccess({ status }: { status: string }) {
   const router = useRouter();
