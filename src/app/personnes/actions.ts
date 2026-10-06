@@ -2,13 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "../../lib/supabase/server";
-
-type FormState =
-  | { status: "idle"; message: "" }
-  | { status: "error"; message: string }
-  | { status: "success"; message: string; personId?: string };
-
-export const initialPersonFormState: FormState = { status: "idle", message: "" };
+import { initialPersonPersonFormState, type PersonPersonFormState } from "./state";
 
 function readString(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -70,9 +64,9 @@ async function personBelongsToOrganization(
 }
 
 export async function createPerson(
-  _previousState: FormState = initialPersonFormState,
+  _previousState: PersonFormState = initialPersonPersonFormState,
   formData: FormData,
-): Promise<FormState> {
+): Promise<PersonFormState> {
   const name = readString(formData.get("name")).replace(/\s+/g, " ");
   if (!name) return { status: "error", message: "Indiquez le nom de la Personne." };
   if (name.length > 160) return { status: "error", message: "Le nom ne peut pas dépasser 160 caractères." };
@@ -110,9 +104,9 @@ export async function createPerson(
 }
 
 export async function updatePerson(
-  _previousState: FormState = initialPersonFormState,
+  _previousState: PersonFormState = initialPersonPersonFormState,
   formData: FormData,
-): Promise<FormState> {
+): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
   if (!isUuid(personId)) return { status: "error", message: "Personne invalide." };
 
@@ -154,9 +148,9 @@ export async function updatePerson(
 }
 
 export async function setPersonCompany(
-  _previousState: FormState = initialPersonFormState,
+  _previousState: PersonFormState = initialPersonPersonFormState,
   formData: FormData,
-): Promise<FormState> {
+): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
   const companyId = readString(formData.get("company_id"));
   const mode = readString(formData.get("mode"));
@@ -193,9 +187,9 @@ export async function setPersonCompany(
 }
 
 export async function createCompanyForPerson(
-  _previousState: FormState = initialPersonFormState,
+  _previousState: PersonFormState = initialPersonPersonFormState,
   formData: FormData,
-): Promise<FormState> {
+): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
   const name = readString(formData.get("company_name")).replace(/\s+/g, " ");
   if (!isUuid(personId) || !name || name.length > 160) {
@@ -234,9 +228,9 @@ export async function createCompanyForPerson(
 }
 
 export async function setPersonMembership(
-  _previousState: FormState = initialPersonFormState,
+  _previousState: PersonFormState = initialPersonPersonFormState,
   formData: FormData,
-): Promise<FormState> {
+): Promise<PersonFormState> {
   const personId = readString(formData.get("person_id"));
   const membershipId = readString(formData.get("membership_id"));
   const mode = readString(formData.get("mode"));
