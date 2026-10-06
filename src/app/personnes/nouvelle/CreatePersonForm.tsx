@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createPerson, initialPersonFormState } from "../actions";
+import { createPerson } from "../actions";
+import { initialPersonFormState } from "../state";
 
 export function CreatePersonForm() {
   const router = useRouter();
