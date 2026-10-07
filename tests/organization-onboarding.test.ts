@@ -77,10 +77,13 @@ test("no-organization UX exposes creation CTA", () => {
   assert.match(shell, /href="\/organisations\/nouvelle"/);
 });
 
-test("real organization home exposes first project CTA", () => {
+test("real organization home is the operational Today screen", () => {
   const home = fs.readFileSync("src/app/page.tsx", "utf8");
-  assert.match(home, /href="\/projets\/nouveau"/);
-  assert.match(home, /Créer un projet/);
+  assert.match(home, /AUJOURD’HUI/);
+  assert.match(home, /Messages à traiter/);
+  assert.match(home, /Tâches à faire/);
+  assert.match(home, /Prochaines Dates/);
+  assert.doesNotMatch(home, /Votre structure est prête|Créer un projet/);
 });
 
 test("project creation UI slice is extracted and deliberately write-free", () => {
@@ -131,20 +134,15 @@ test("real project success route reads projects and not demo fixtures", () => {
   assert.doesNotMatch(source, /demoProjects|demoToday|data\/demo/);
 });
 
-test("real structure home loads projects filtered by current organization", () => {
+test("Today uses real current-organization data without demo fixtures", () => {
   const source = fs.readFileSync("src/app/page.tsx", "utf8");
+  assert.match(source, /getCurrentIdentity/);
   assert.match(source, /from\("projects"\)/);
+  assert.match(source, /from\("messages"\)/);
+  assert.match(source, /from\("tasks"\)/);
+  assert.match(source, /from\("events"\)/);
   assert.match(source, /\.eq\("organization_id", identity\.organization\.id\)/);
-  assert.match(source, /\.is\("archived_at", null\)/);
-  assert.doesNotMatch(source, /demoProjects|demoToday|data\/demo/);
-});
-
-test("real structure home conditionally renders empty state and project links", () => {
-  const source = fs.readFileSync("src/app/page.tsx", "utf8");
-  assert.match(source, /realProjects\.length === 0/);
-  assert.match(source, /Aucun projet pour le moment/);
-  assert.match(source, /href=\{\`\/projets\/reel\/\$\{project\.id\}\`\}/);
-  assert.match(source, /href="\/projets\/nouveau"/);
+  assert.doesNotMatch(source, /demoProjects|demoToday|demoRecentActivity|data\/demo/);
 });
 
 test("real project page is a durable project sheet using only real project data", () => {
