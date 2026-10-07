@@ -29,7 +29,7 @@ export function SecondaryMenu() {
     {open && <div className="menu-panel" id={panelId} role="dialog" aria-label="Menu secondaire">
       <Link className="menu-help-link" href="/aide" onClick={() => setOpen(false)}>Comment fonctionne Boralog ?</Link>
       <Link className="menu-help-link menu-calendar-link" href="/calendrier" onClick={() => setOpen(false)}>Calendrier</Link>
-      <div className="menu-unavailable" aria-disabled="true"><span>Paramètres</span><small>Bientôt disponible</small></div>
+      <Link className="menu-help-link" href="/parametres" onClick={() => setOpen(false)}>Paramètres</Link>
       <form action="/auth/deconnexion" method="post" onSubmit={() => setSigningOut(true)}>
         <button className="menu-signout" type="submit" disabled={signingOut}>{signingOut ? "Déconnexion…" : "Se déconnecter"}</button>
       </form>
