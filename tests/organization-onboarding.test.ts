@@ -96,13 +96,16 @@ test("project creation UI slice is extracted and deliberately write-free", () =>
   assert.doesNotMatch(form, /supabase|\.insert\s*\(/);
 });
 
-test("project create action resolves auth and organization server-side", () => {
+test("project create action reuses canonical current organization", () => {
   const source = fs.readFileSync("src/app/projets/nouveau/actions.ts", "utf8");
-  assert.match(source, /supabase\.auth\.getUser\(\)/);
-  assert.match(source, /from\("organization_memberships"\)/);
-  assert.match(source, /organization_id:\s*membership\.organization_id/);
-  assert.match(source, /created_by:\s*authData\.user\.id/);
+  assert.match(source, /getCurrentIdentity/);
+  assert.match(source, /identity\.organization\.id/);
+  assert.match(source, /identity\.userId/);
+  assert.match(source, /identity\.organization\.accessLevel/);
+  assert.match(source, /"owner"/);
+  assert.match(source, /"full"/);
   assert.doesNotMatch(source, /formData\.get\(["']organization_id/);
+  assert.doesNotMatch(source, /\.from\("organization_memberships"\)[\s\S]{0,500}\.limit\(1\)/);
 });
 
 test("project insert never requests RETURNING visibility", () => {
