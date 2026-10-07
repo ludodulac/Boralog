@@ -17,6 +17,10 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+function readParam(value: string | string[] | undefined) {
+  return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+}
+
 export async function POST(request: Request) {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const webhookUrl = process.env.BORALOG_TWILIO_WEBHOOK_URL;
@@ -43,10 +47,10 @@ export async function POST(request: Request) {
 
   if (!signatureValid) return textError("Invalid Twilio signature.", 403);
 
-  const messageSid = params.MessageSid?.trim() ?? "";
-  const from = params.From?.trim() ?? "";
-  const to = params.To?.trim() ?? "";
-  const content = params.Body?.trim() ?? "";
+  const messageSid = readParam(params.MessageSid);
+  const from = readParam(params.From);
+  const to = readParam(params.To);
+  const content = readParam(params.Body);
 
   if (!messageSid) return textError("MessageSid is required.", 400);
   if (!from) return textError("From is required.", 400);
