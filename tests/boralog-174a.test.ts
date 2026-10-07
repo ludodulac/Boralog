@@ -56,7 +56,7 @@ test("BORALOG-174A navigation remains unchanged", () => {
   for (const item of ["Aujourd’hui", "Messages", "Projets", "Personnes", "Recherche", "Moi"]) {
     assert.ok(nav.includes(item));
   }
-  assert.ok(nav.includes('["Aujourd’hui", "/"]'));
+  assert.match(nav, /"Aujourd’hui", "\/"/);
 });
 
 test("BORALOG-174A SSR session architecture remains intact", () => {
