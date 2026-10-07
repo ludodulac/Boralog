@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarDays, CheckCircle2, MessageCircle } from "lucide-react";
+import { CalendarDays, Circle } from "lucide-react";
 import { getCurrentIdentity } from "../lib/auth";
 import { formatBoralogDateTime, getBoralogCivilDate } from "../lib/date-time";
 import { createClient } from "../lib/supabase/server";
@@ -102,7 +102,6 @@ export default async function Home() {
         <div className="message-list">
           {realMessages.map((message) => (
             <Link className="message-card" href={`/messages/${message.id}`} key={message.id}>
-              <MessageCircle size={18} aria-hidden="true" />
               <strong>{preview(message.content)}</strong>
               <small>{message.project_id ? `${projectNames.get(message.project_id) ?? "Projet"} · ` : ""}{formatBoralogDateTime(message.created_at, "short")}</small>
             </Link>
@@ -126,7 +125,7 @@ export default async function Home() {
               event ? [event.venue_name, event.city].filter(Boolean).join(" · ") : null,
             ].filter(Boolean).join(" · ");
             return <article className="work-task" key={task.id}>
-              <div className="work-task-icon"><CheckCircle2 size={19} aria-hidden="true" /></div>
+              <div className="work-task-icon"><Circle size={19} aria-hidden="true" /></div>
               <div className="work-task-copy">
                 <span className="tag">À FAIRE</span>
                 <h3>{task.content}</h3>
