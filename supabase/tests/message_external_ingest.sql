@@ -250,12 +250,13 @@ begin
 end $$;
 
 reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','17610000-0000-4000-8000-000000000001',true);
 
-do $$
+do $
 declare
   denied boolean := false;
 begin
-  set local role authenticated;
   begin
     perform public.boralog_ingest_external_message(
       '17611000-0000-4000-8000-000000000001',
@@ -268,11 +269,11 @@ begin
   exception when insufficient_privilege then
     denied := true;
   end;
-  reset role;
 
   if not denied then
     raise exception '176B external ingest RPC was executable by authenticated';
   end if;
-end $$;
+end $;
 
+reset role;
 rollback;
