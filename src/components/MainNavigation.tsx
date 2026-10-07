@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { CalendarDays, FolderKanban, MessageCircle, Search, UserRound } from "lucide-react";
+import { CalendarDays, FolderKanban, MessageCircle, Search, UserRound, UsersRound } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const nav = [
   [CalendarDays, "Aujourd’hui", "/"],
   [MessageCircle, "Messages", "/messages"],
   [FolderKanban, "Projets", "/projets"],
+  [UsersRound, "Personnes", "/personnes"],
   [Search, "Recherche", "/recherche"],
   [UserRound, "Moi", "/moi"],
 ] satisfies readonly (readonly [LucideIcon, string, string])[];
@@ -20,6 +21,7 @@ function isActive(label: string, pathname: string) {
   if (label === "Projets") return pathname === "/projets" || pathname.startsWith("/projets/");
   if (label === "Aujourd’hui") return pathname === "/" || pathname.startsWith("/aujourdhui/");
   if (label === "Messages") return pathname === "/messages" || pathname.startsWith("/messages/");
+  if (label === "Personnes") return pathname === "/personnes" || pathname.startsWith("/personnes/");
   if (label === "Recherche") return pathname === "/recherche" || pathname.startsWith("/recherche/");
   if (label === "Moi") return pathname === "/moi" || pathname.startsWith("/moi/");
   return false;
