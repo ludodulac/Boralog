@@ -1,22 +1,34 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { SHARED_MESSAGE_STORAGE_KEY } from "../../../lib/android-share";
 import { createSharedMessage } from "./actions";
 import { initialSharedMessageState } from "./state";
 
+function subscribeToSharedDraft() {
+  return () => {};
+}
+
+function readSharedDraft() {
+  return sessionStorage.getItem(SHARED_MESSAGE_STORAGE_KEY) ?? "";
+}
+
+function readServerSharedDraft() {
+  return null;
+}
+
 export function SharedMessageConfirmation() {
   const router = useRouter();
-  const [content, setContent] = useState("");
-  const [loaded, setLoaded] = useState(false);
+  const sharedDraft = useSyncExternalStore(
+    subscribeToSharedDraft,
+    readSharedDraft,
+    readServerSharedDraft,
+  );
+  const [editedContent, setEditedContent] = useState<string | null>(null);
+  const content = editedContent ?? sharedDraft ?? "";
   const [sourceKind, setSourceKind] = useState<"WHATSAPP" | "OTHER">("WHATSAPP");
   const [state, action, pending] = useActionState(createSharedMessage, initialSharedMessageState);
-
-  useEffect(() => {
-    setContent(sessionStorage.getItem(SHARED_MESSAGE_STORAGE_KEY) ?? "");
-    setLoaded(true);
-  }, []);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -26,7 +38,7 @@ export function SharedMessageConfirmation() {
     }
   }, [router, state.status]);
 
-  if (!loaded) return <p className="work-empty">Chargement du texte partagé…</p>;
+  if (sharedDraft === null) return <p className="work-empty">Chargement du texte partagé…</p>;
   if (!content) return <p className="work-empty">Aucun texte partagé n’est disponible. Revenez dans l’application source et utilisez Partager → BORALOG.</p>;
 
   return <form className="project-create-form" action={action} aria-busy={pending}>
@@ -37,7 +49,7 @@ export function SharedMessageConfirmation() {
         rows={8}
         required
         value={content}
-        onChange={(event) => setContent(event.target.value)}
+        onChange={(event) => setEditedContent(event.target.value)}
         readOnly={pending}
       />
     </label>
