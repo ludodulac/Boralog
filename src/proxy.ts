@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "./lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/partager/android") {
+    return NextResponse.next();
+  }
+
   const { response, authenticated } = await updateSession(request);
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
 
