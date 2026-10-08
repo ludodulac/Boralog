@@ -837,3 +837,134 @@ Une structure active/désactive certains modules, définit ses rôles et ses mod
 La structure ajoute ses besoins spécifiques à partir de briques contrôlées.
 
 Ne pas aller vers un “no-code builder” illimité tant que le besoin n'est pas démontré. Trop de liberté peut détruire la cohérence, la recherche et la simplicité qui constituent précisément la valeur de Boralog.
+
+
+## 22. Doctrine temporelle et organisation du travail
+
+### 22.1 Ne pas transformer Boralog en gestionnaire de tâches générique
+
+Une tâche n'est créée que lorsqu'un travail doit réellement être accompli. Une information, un changement ou une réponse attendue ne devient pas automatiquement une tâche.
+
+**Aujourd'hui** est une vue d'attention : elle fait remonter ce qui mérite l'intervention ou la vigilance de la personne à partir des objets métier et de leur contexte.
+
+### 22.2 Quatre notions à ne pas confondre
+
+- **Événement / date** : fait planifié dans le temps, lié au projet.
+- **Tâche** : action à accomplir, éventuellement liée à un événement.
+- **Attention** : signal contextuel destiné à une personne ; il peut être dérivé d'une tâche ou d'une autre situation métier.
+- **Échéance** : limite temporelle d'une tâche. La date de l'événement et l'échéance peuvent être différentes.
+
+Exemple : une représentation a lieu le 18 octobre ; « réserver l'hôtel » peut avoir une échéance au 5 octobre.
+
+### 22.3 Calendrier
+
+Le calendrier est une **vue**, pas un stockage métier. Il projette chronologiquement les objets qui possèdent une dimension temporelle et conserve leur nature visible.
+
+Il pourra réunir :
+- représentations et autres dates de spectacle ;
+- répétitions et rendez-vous ;
+- échéances de tâches ;
+- autres événements professionnels pertinents.
+
+Sur téléphone, préférer une chronologie verticale claire. Une grille mensuelle ne doit être introduite que si elle apporte une valeur démontrée et reste lisible. Aucun objet ne doit être dupliqué pour apparaître dans le calendrier.
+
+
+## 23. Entrée, contexte et fraîcheur de l'information
+
+Toute information opérationnelle doit conserver son contexte visible : structure si nécessaire, projet/spectacle, date éventuelle, domaine et personnes concernées. Une vue dérivée ne doit pas recréer une seconde vérité simplement pour son propre affichage.
+
+Lorsqu'une information est nouvelle ou modifiée, l'interface peut indiquer sobrement sa fraîcheur et sa dernière mise à jour. Aujourd'hui peut reprendre cette information lorsqu'elle est pertinente pour la personne. Cette reprise n'implique ni tâche automatique ni notification réelle.
+
+### Préparation au partage externe
+
+Le modèle doit accepter à terme un contenu reçu depuis le mécanisme de partage du téléphone (texte, lien ou fichier) avant son classement. Le parcours UX cible est : réception → choix ou suggestion de contexte → confirmation humaine → enregistrement.
+
+Une suggestion de classement n'est jamais une donnée certaine par elle-même. Toute automatisation future doit conserver la provenance, distinguer suggestion et confirmation, exprimer un niveau de confiance lorsque pertinent et demander une validation humaine lorsque le contexte n'est pas suffisamment certain.
+
+Le prototype actuel ne met en œuvre ni Web Share Target, ni application Android, ni Share Extension iOS, ni intégration WhatsApp/SMS.
+
+
+## 24. Feedback des mutations et confidentialité avant enregistrement
+
+### 24.1 États d'interaction
+
+Toute mutation ou opération qui demande réellement du temps doit exposer un état perceptible et fidèle :
+
+**prêt → pending → succès ou erreur.**
+
+Pendant le pending, le contrôle peut être désactivé lorsque cela évite raisonnablement un double envoi. Un chargement de contenu peut utiliser un skeleton ou un état loading adapté. Le succès reste sobre mais explicite. L'erreur explique ce qui s'est passé, permet de réessayer lorsque pertinent et conserve la saisie dès que cela est raisonnablement possible.
+
+Ne jamais simuler une attente pour donner l'impression que le système travaille. Une navigation instantanée n'a pas besoin de spinner. **Aucune action importante ne doit être silencieuse, mais aucun feedback ne doit être fictif.**
+
+### 24.2 Visibilité d'une information
+
+La visibilité est une propriété métier de l'information, pas un simple choix d'affichage. Le futur formulaire de création doit rendre compréhensibles avant validation :
+
+- **contenu** ;
+- **contexte** ;
+- **domaine** ;
+- **visibilité**.
+
+Une information transformée en véritable tâche peut en plus recevoir un responsable et une échéance. Ces champs ne doivent pas transformer une simple information en tâche par défaut.
+
+La liste exacte des modes de visibilité reste à concevoir. L'UX doit néanmoins pouvoir exprimer clairement des audiences comme une équipe ou un rôle, des personnes choisies, l'administration ou un accès restreint. Appartenir à la même structure ou au même projet ne confère pas implicitement l'accès à toute information.
+
+Pour une information sensible, appliquer **deny-by-default** : l'absence d'autorisation explicite signifie absence d'accès. Le serveur et la base doivent filtrer et refuser les lectures et mutations non autorisées ; masquer un composant côté client n'est pas une mesure de confidentialité.
+
+Le futur parcours de partage depuis une application extérieure réutilise le même contrat : contenu reçu → contexte → domaine → visibilité lorsque nécessaire → confirmation → enregistrement. La visibilité doit être confirmée avant qu'un contenu confidentiel devienne une information Boralog.
+
+
+## 25. Référence unique, représentations multiples
+
+Les vues Boralog ne doivent pas posséder leurs propres copies des objets métier. Une donnée de référence est identifiée une fois ; les relations de contexte déterminent ses représentations.
+
+La hiérarchie métier **structure → projet → date → informations/tâches/documents/conversations pertinents** n'impose pas de navigation séquentielle. Aujourd'hui, Recherche, Toutes les tâches, Calendrier et Messages sont des projections transversales permettant un accès direct.
+
+Sur une page Projet ou Date, appliquer la divulgation progressive : montrer un résumé utile (par exemple nombre de tâches en cours et bientôt), puis un lien vers une vue filtrée explicitement contextualisée. Ne pas embarquer le gestionnaire complet de tâches dans chaque page.
+
+Une vue filtrée annonce son contexte dans son titre et fournit un retour clair vers le projet ou la date d'origine. Le filtrage s'appuie sur les identifiants/relations des objets, jamais sur une seconde collection recopiée pour l'écran.
+
+
+## 26. Navigation globale persistante et contexte local
+
+Une page interne ne doit pas devenir une impasse de navigation. La profondeur métier conserve deux niveaux complémentaires :
+
+- **navigation globale persistante** vers Aujourd'hui, Messages, Projets, Recherche et Moi ;
+- **navigation contextuelle** indiquant le projet, la date ou le parent métier courant et permettant d'y revenir.
+
+La navigation contextuelle ne remplace jamais la navigation globale. Aujourd'hui est l'accueil opérationnel ; aucun second bouton « Accueil » n'est nécessaire. Le menu hamburger reste secondaire et ne doit pas absorber les cinq destinations principales.
+
+Sur téléphone, les cinq destinations restent réparties en cinq zones tactiles distinctes, sans défilement horizontal, et respectent la safe area exposée par le navigateur. Sur ordinateur, la même navigation globale reste stable à gauche. L'état actif est annoncé sémantiquement et visuellement ; le contexte précis reste porté par le contenu de la page.
+
+
+## 27. Aujourd'hui : reprise opérationnelle personnelle
+
+**Aujourd'hui** est le point d'entrée opérationnel personnel. Il rassemble, dans cet ordre de priorité :
+
+1. ce qui exige réellement une action ou une attention maintenant ;
+2. les changements pertinents depuis la dernière consultation ;
+3. les prochaines dates utiles.
+
+Aujourd'hui n'est ni un journal exhaustif, ni un centre de notifications générique, ni une copie des tâches, messages ou informations sources. **Information ≠ attention ≠ tâche.** Une information nouvelle ou modifiée reste l'information de référence de son projet et de sa date ; Aujourd'hui n'en affiche qu'une représentation contextualisée. Une tâche urgente peut y être représentée sans être recréée.
+
+La section « Depuis votre dernière visite » est DEMO tant que l'authentification et un curseur de dernière consultation n'existent pas. Le système réel devra la calculer à partir de l'identité authentifiée, des permissions, du dernier point de consultation et des informations créées ou modifiées depuis ce point.
+
+Un agrégateur Aujourd'hui ne peut jamais élargir les droits de lecture : il ne présente que des objets que l'utilisateur connecté est autorisé à lire selon les permissions de leur source. L'agrégation est une représentation, jamais un contournement des règles de confidentialité.
+
+
+## 28. Identité authentifiée et accès métier
+
+La fondation d'identité suit quatre niveaux distincts :
+
+- **Compte → identité** : une personne authentifiée par Supabase Auth, reliée à son profil public.profiles.
+- **Membership organisation → accès structure** : l'existence d'un compte ne donne aucun accès à une structure.
+- **Membership projet → accès projet** : les accès projet découlent des relations métier et des règles RLS, pas d'un identifiant fourni arbitrairement par le client.
+- **Rôle / permissions → actions autorisées** : l'authentification seule ne constitue jamais une autorisation métier.
+
+Aucune autorisation ne doit dépendre de user_metadata. Ces métadonnées peuvent servir à initialiser une donnée d'identité lors de l'inscription, mais la donnée de profil persistée et les memberships sont les références applicatives. Une policy TO authenticated n'est pas suffisante sans prédicat d'autorisation approprié.
+
+### Phase transitoire
+
+Boralog fonctionne temporairement avec **AUTH RÉELLE + CONTENU MÉTIER ENCORE DEMO**. demo.ts reste un outil de construction des écrans et ne représente pas les droits ou appartenances de la personne connectée. Une personne authentifiée sans membership voit un état « aucune structure » et ne doit pas être présentée comme Marion, ni comme membre de Bora Bora Productions ou d'un projet fictif.
+
+Les routes internes sont protégées côté serveur. La session SSR est portée par cookies et vérifiée avant l'accès ; aucune clé service_role ne doit être exposée au frontend ou dans une variable publique.
