@@ -31,7 +31,7 @@ export default async function MessageDetailPage({
   const { data: message, error: messageError } = await supabase
     .from("messages")
     .select(
-      "id, organization_id, project_id, event_id, content, status, created_by, created_at, processed_at, processed_by, origin_type, author_user_id, external_author_label, source_kind, source_occurred_at, visibility"
+      "id, organization_id, project_id, event_id, content, status, created_by, created_at, processed_at, processed_by, origin_type, author_user_id, external_author_person_id, external_author_label, source_kind, source_occurred_at, visibility"
     )
     .eq("id", id)
     .maybeSingle();
@@ -42,6 +42,7 @@ export default async function MessageDetailPage({
     { data: notes, error: notesError },
     { data: recipients },
     { data: authorProfile },
+    { data: externalAuthorPerson },
     projectResult,
     eventResult,
   ] = await Promise.all([
@@ -55,6 +56,14 @@ export default async function MessageDetailPage({
       : Promise.resolve({ data: [] as { user_id: string }[], error: null }),
     message.author_user_id
       ? supabase.from("profiles").select("id, display_name").eq("id", message.author_user_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    message.external_author_person_id
+      ? supabase
+          .from("people")
+          .select("id, name")
+          .eq("id", message.external_author_person_id)
+          .eq("organization_id", message.organization_id)
+          .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
     message.project_id
       ? supabase.from("projects").select("id, name").eq("id", message.project_id).maybeSingle()
@@ -113,7 +122,8 @@ export default async function MessageDetailPage({
     ? businessPerson?.name
       || authorProfile?.display_name
       || (message.author_user_id === authData.user.id ? "Vous" : null)
-    : message.external_author_label
+    : externalAuthorPerson?.name
+      || message.external_author_label
       || authorProfile?.display_name
       || (message.author_user_id === authData.user.id ? "Vous" : null);
   const sourceDate = message.source_occurred_at || message.created_at;
@@ -145,8 +155,8 @@ export default async function MessageDetailPage({
       <h2 id="message-source-title">Source originale</h2>
       <p>{message.content}</p>
       <div className="message-source-meta">
-        <span>{displaySourceKind(message.source_kind)}</span>
-        {sourceAuthor && <span>{sourceAuthor}</span>}
+        <span>Source : {displaySourceKind(message.source_kind)}</span>
+        <span>Expéditeur : {sourceAuthor || "Inconnu"}</span>
         {message.origin_type === "INTERNAL" && businessCompanies.length > 0 && <span>{businessCompanies.join(" · ")}</span>}
         <time dateTime={sourceDate}>{formatBoralogDateTime(sourceDate)}</time>
       </div>
