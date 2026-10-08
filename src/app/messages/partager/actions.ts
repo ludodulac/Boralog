@@ -15,6 +15,7 @@ export async function createSharedMessage(
 ): Promise<SharedMessageState> {
   const content = String(formData.get("content") ?? "").trim().replace(/\r\n/g, "\n");
   const sourceKind = formData.get("source_kind");
+  const senderMode = formData.get("sender_mode");
   const senderPersonId = String(formData.get("sender_person_id") ?? "").trim();
   const externalAuthorLabel = String(formData.get("external_author_label") ?? "").trim();
 
@@ -22,8 +23,23 @@ export async function createSharedMessage(
   if (sourceKind !== "WHATSAPP" && sourceKind !== "OTHER") {
     return { status: "error", message: "Choisissez la source du message." };
   }
+  if (senderMode !== "PERSON" && senderMode !== "UNREGISTERED" && senderMode !== "UNKNOWN") {
+    return { status: "error", message: "Choisissez l’expéditeur." };
+  }
   if (senderPersonId && externalAuthorLabel) {
     return { status: "error", message: "Choisissez une Personne BORALOG ou un nom libre, pas les deux." };
+  }
+  if (senderMode === "PERSON" && !senderPersonId) {
+    return { status: "error", message: "Sélectionnez une Personne BORALOG." };
+  }
+  if (senderMode === "UNREGISTERED" && !externalAuthorLabel) {
+    return { status: "error", message: "Saisissez le nom de la personne non enregistrée." };
+  }
+  if (senderMode === "UNKNOWN" && (senderPersonId || externalAuthorLabel)) {
+    return { status: "error", message: "Un expéditeur inconnu ne doit pas contenir de nom." };
+  }
+  if (externalAuthorLabel.length > 160) {
+    return { status: "error", message: "Le nom de l’expéditeur est trop long." };
   }
   if (senderPersonId && !isUuid(senderPersonId)) {
     return { status: "error", message: "La Personne sélectionnée n’est pas valide." };
