@@ -91,7 +91,9 @@ test("BORALOG-177B dedicated insert is EXTERNAL_MANUAL only", () => {
   assert.match(action, /source_kind:\s*sourceKind/);
   assert.match(action, /created_by:\s*identity\.userId/);
   assert.match(action, /author_user_id:\s*null/);
-  assert.match(action, /external_author_label:\s*null/);
+  assert.match(action, /external_author_person_id:\s*senderPersonId \|\| null/);
+  assert.match(action, /external_author_label:\s*externalAuthorLabel \|\| null/);
+  assert.match(action, /senderPersonId && externalAuthorLabel/);
   assert.match(action, /source_occurred_at:\s*null/);
   assert.match(action, /visibility:\s*"ORGANIZATION"/);
   assert.match(action, /project_id:\s*null/);

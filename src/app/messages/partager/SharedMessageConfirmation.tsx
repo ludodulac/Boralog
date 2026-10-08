@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { SHARED_MESSAGE_STORAGE_KEY } from "../../../lib/android-share";
 import { createSharedMessage } from "./actions";
 import { initialSharedMessageState } from "./state";
+import { PersonSenderCombobox, type PersonSenderOption } from "./PersonSenderCombobox";
 
 function subscribeToSharedDraft() {
   return () => {};
@@ -18,7 +19,7 @@ function readServerSharedDraft() {
   return null;
 }
 
-export function SharedMessageConfirmation() {
+export function SharedMessageConfirmation({ people }: { people: PersonSenderOption[] }) {
   const router = useRouter();
   const sharedDraft = useSyncExternalStore(
     subscribeToSharedDraft,
@@ -53,6 +54,8 @@ export function SharedMessageConfirmation() {
         readOnly={pending}
       />
     </label>
+
+    <PersonSenderCombobox people={people} />
 
     <fieldset className="message-audience">
       <legend>Source</legend>
