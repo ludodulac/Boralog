@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarDays, Circle } from "lucide-react";
+import { ImportClipboardButton } from "../components/ImportClipboardButton";
 import { getCurrentIdentity } from "../lib/auth";
 import { formatBoralogDateTime, getBoralogCivilDate } from "../lib/date-time";
 import { createClient } from "../lib/supabase/server";
@@ -90,6 +91,16 @@ export default async function Home() {
       <h1>Aujourd’hui</h1>
       <p>{identity.organization.name}</p>
     </header>
+
+    <section className="today-section" aria-labelledby="today-import-title">
+      <div className="section-title">
+        <div>
+          <h2 id="today-import-title">Importer un message</h2>
+          <p>Ajoutez rapidement un texte copié depuis WhatsApp ou une autre application.</p>
+        </div>
+      </div>
+      <ImportClipboardButton />
+    </section>
 
     {nothingPending && <p className="work-note">Rien ne demande votre attention pour le moment.</p>}
 
