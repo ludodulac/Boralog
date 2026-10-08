@@ -41,10 +41,25 @@ test("BORALOG-177B receiver keeps content out of URL and stores session draft", 
   assert.match(receiver, /Aucun texte à partager/);
 });
 
-test("BORALOG-177B only exact Android receiver bypasses auth", () => {
+test("BORALOG-177B only technical share routes bypass auth", () => {
+  assert.match(proxy, /pathname === "\/partager\/android"/);
+  assert.match(proxy, /pathname === "\/manifest\.webmanifest"/);
+  assert.match(proxy, /isPublicTechnicalRoute/);
+  assert.match(proxy, /updateSession/);
+  assert.match(proxy, /url\.pathname = "\/auth\/connexion"/);
+});
+
+test("BORALOG-177B manifest is public while business routes stay protected", () => {
+  assert.match(proxy, /request\.nextUrl\.pathname === "\/manifest\.webmanifest"/);
+  for (const route of ["/", "/messages", "/projets", "/personnes", "/parametres"]) {
+    assert.doesNotMatch(proxy, new RegExp(`pathname === ["']${route.replace(/[.*+?^$\{\}()|[\]\\]/g, "\\test("BORALOG-177B only exact Android receiver bypasses auth", () => {
   assert.match(proxy, /pathname === "\/partager\/android"/);
   assert.match(proxy, /updateSession/);
   assert.match(proxy, /url\.pathname = "\/auth\/connexion"/);
+});
+")}["']`));
+  }
+  assert.match(proxy, /if \(!authenticated && !isAuthRoute\)/);
 });
 
 test("BORALOG-177B auth return accepts internal paths and rejects open redirects", () => {
