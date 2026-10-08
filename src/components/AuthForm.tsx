@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { PasswordField } from "./PasswordField";
+import { safeInternalReturnPath } from "../lib/android-share";
 
 type Mode = "connexion" | "inscription";
 
@@ -15,9 +16,10 @@ function messageFor(error: string) {
   return "L’action n’a pas pu aboutir. Réessayez.";
 }
 
-export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedback?: string }) {
+export function AuthForm({ mode, initialFeedback, returnTo = "/" }: { mode: Mode; initialFeedback?: string; returnTo?: string }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const safeReturnTo = safeInternalReturnPath(returnTo);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(initialFeedback ? { type: "success", text: initialFeedback } : null);
 
   async function submit(formData: FormData) {
@@ -35,7 +37,7 @@ export function AuthForm({ mode, initialFeedback }: { mode: Mode; initialFeedbac
         return;
       }
       setFeedback({ type: "success", text: "Connecté." });
-      router.replace("/");
+      router.replace(safeReturnTo);
       router.refresh();
       return;
     }
