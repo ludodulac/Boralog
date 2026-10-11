@@ -2,6 +2,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "./lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/demo/organisation") {
+    const headers = new Headers(request.headers);
+    headers.set("x-boralog-internal-demo-route", "organisation");
+    return NextResponse.next({ request: { headers } });
+  }
+  // Never trust a client-supplied demo marker on any protected route.
+  const protectedHeaders = new Headers(request.headers);
+  protectedHeaders.delete("x-boralog-internal-demo-route");
+  request = new Request(request, { headers: protectedHeaders }) as NextRequest;
+
   const isPublicTechnicalRoute =
     request.nextUrl.pathname === "/partager/android"
     || request.nextUrl.pathname === "/manifest.webmanifest";
