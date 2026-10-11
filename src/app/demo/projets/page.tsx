@@ -59,7 +59,7 @@ export default function DemoProjectsPage() {
     let db: IDBDatabase | undefined;
     try {
       db = await openDemoDatabase();
-      const project: Project & { organization_id: string } = {
+      const project = {
         id: crypto.randomUUID(), organization_id: DEMO_ORG_ID,
         name: trimmedName, description: description.trim(), status,
       };
