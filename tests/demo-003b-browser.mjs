@@ -25,6 +25,30 @@ try {
   await page.getByTestId("demo-organization-name").getByText("Compagnie Horizon").waitFor();
   await page.reload();
   await page.getByTestId("demo-organization-name").getByText("Compagnie Horizon").waitFor();
+  await page.getByRole("link", { name: /Voir les projets fictifs/ }).click();
+  await page.waitForURL("**/demo/projets");
+  await page.getByTestId("demo-project-list").getByText("Les Étoiles du soir").waitFor();
+  await page.getByTestId("demo-project-list").getByText("Le Voyage des lucioles").waitFor();
+  const savedProjects = await page.evaluate(async () => {
+    return await new Promise((resolve, reject) => {
+      const request = indexedDB.open("boralog-demo");
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction("projects", "readonly");
+        const rows = transaction.objectStore("projects").getAll();
+        rows.onsuccess = () => { resolve(rows.result); db.close(); };
+        rows.onerror = () => reject(rows.error);
+      };
+    });
+  });
+  assert.equal(savedProjects.length, 2, "Both demo projects must be persisted in IndexedDB");
+  await page.reload();
+  await page.getByTestId("demo-project-list").getByText("Les Étoiles du soir").waitFor();
+  await page.getByRole("link", { name: /Retour à Compagnie Horizon/ }).click();
+  await page.getByTestId("demo-organization-name").getByText("Compagnie Horizon").waitFor();
+  await page.getByRole("link", { name: /Voir les projets fictifs/ }).click();
+  await page.getByTestId("demo-project-list").getByText("Le Voyage des lucioles").waitFor();
   assert.deepEqual(supabaseCalls, []);
   const protectedResponse = await page.request.get(origin + "/projets", { maxRedirects: 0 });
   assert.equal(protectedResponse.status(), 307);
