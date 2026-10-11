@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { DEMO_ORG_ID, getRecord, initializeDemo, openDemoDatabase } from "@/lib/demo/local-db";
 
 export default function DemoOrganizationPage() {
@@ -46,5 +47,6 @@ export default function DemoOrganizationPage() {
       </div>
       {error ? <p role="alert">{error}</p> : <p className="profile-intro">La Structure contient vos Projets, Personnes, Messages et Dates.</p>}
     </section>
+    <Link className="project-create-cta" href="/demo/projets">Voir les projets fictifs →</Link>
   </div></main>;
 }

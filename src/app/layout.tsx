@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = { title: "Boralog", description: "La mémoire opérationnelle partagée du spectacle vivant." };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const isDemoRoute = (await headers()).get("x-boralog-internal-demo-route") === "organisation";
+  const isDemoRoute = (await headers()).get("x-boralog-internal-demo-route") === "organisation" || (await headers()).get("x-boralog-internal-demo-route") === "projets";
   const identity = isDemoRoute
     ? {
         userId: "00000000-0000-4000-8000-000000000001",
