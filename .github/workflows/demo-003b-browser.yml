@@ -5,6 +5,8 @@ on:
       - 'src/proxy.ts'
       - 'src/app/layout.tsx'
       - 'src/app/demo/organisation/**'
+      - 'src/app/demo/projets/**'
+      - 'src/lib/demo/projects.ts'
       - 'tests/demo-003b-browser.mjs'
       - '.github/workflows/demo-003b-browser.yml'
   workflow_dispatch:
