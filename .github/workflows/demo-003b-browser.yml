@@ -1,0 +1,28 @@
+name: Boralog isolated demo route Chromium
+on:
+  pull_request:
+    paths:
+      - 'src/proxy.ts'
+      - 'src/app/layout.tsx'
+      - 'src/app/demo/organisation/**'
+      - 'tests/demo-003b-browser.mjs'
+      - '.github/workflows/demo-003b-browser.yml'
+  workflow_dispatch:
+jobs:
+  demo-route:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --package-lock=false playwright
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-only-placeholder-not-a-real-key
+      - run: node tests/demo-003b-browser.mjs
