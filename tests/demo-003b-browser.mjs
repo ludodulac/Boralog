@@ -49,6 +49,35 @@ try {
   await page.getByTestId("demo-organization-name").getByText("Compagnie Horizon").waitFor();
   await page.getByRole("link", { name: /Voir les projets fictifs/ }).click();
   await page.getByTestId("demo-project-list").getByText("Le Voyage des lucioles").waitFor();
+  await page.getByRole("button", { name: "Nouveau projet" }).click();
+  const form = page.getByTestId("demo-create-project-form");
+  await form.waitFor();
+  await form.getByLabel(/Nom du projet/).fill("Projet créé dans Chromium");
+  await form.getByLabel(/Description/).fill("Description conservée après rechargement");
+  await form.getByLabel("Statut").selectOption("en cours");
+  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByTestId("demo-project-list").getByText("Projet créé dans Chromium").waitFor();
+  await page.reload();
+  await page.getByTestId("demo-project-list").getByText("Projet créé dans Chromium").waitFor();
+  const afterCreation = await page.evaluate(async () => new Promise((resolve, reject) => {
+    const request = indexedDB.open("boralog-demo");
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const rows = db.transaction("projects", "readonly").objectStore("projects").getAll();
+      rows.onsuccess = () => { resolve(rows.result); db.close(); };
+      rows.onerror = () => reject(rows.error);
+    };
+  }));
+  assert.equal(afterCreation.length, 3, "Two seed projects and exactly one created project");
+  assert.equal(afterCreation.filter(p => p.name === "Les Étoiles du soir").length, 1);
+  assert.equal(afterCreation.filter(p => p.name === "Le Voyage des lucioles").length, 1);
+  assert.equal(afterCreation.find(p => p.name === "Projet créé dans Chromium")?.organization_id,
+    "00000000-0000-4000-8000-000000000002");
+  await page.getByRole("link", { name: /Retour à Compagnie Horizon/ }).click();
+  await page.getByTestId("demo-organization-name").getByText("Compagnie Horizon").waitFor();
+  await page.getByRole("link", { name: /Voir les projets fictifs/ }).click();
+  await page.getByTestId("demo-project-list").getByText("Projet créé dans Chromium").waitFor();
   assert.deepEqual(supabaseCalls, []);
   const protectedResponse = await page.request.get(origin + "/projets", { maxRedirects: 0 });
   assert.equal(protectedResponse.status(), 307);
