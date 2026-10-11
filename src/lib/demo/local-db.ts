@@ -114,7 +114,7 @@ export async function mutateDemo(db: IDBDatabase, mutations: Mutation[]): Promis
         if (!mutation.value || mutation.value.id !== mutation.id) throw new Error("Invalid mutation id");
         for (const rel of RELATIONS[mutation.store] ?? []) {
           const foreignId = mutation.value[rel.field];
-          if (foreignId !== undefined && foreignId !== null && !(await requestResult(tx.objectStore(rel.target).get(foreignId)))) {
+          if (foreignId !== undefined && foreignId !== null && (typeof foreignId !== "string" || !(await requestResult(tx.objectStore(rel.target).get(foreignId))))) {
             throw new Error("Missing relation " + mutation.store + "." + rel.field);
           }
         }
