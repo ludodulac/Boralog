@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { chromium } from "playwright";
 
 const port = 32071;
-const server = spawn("npm", ["run", "start", "--", "-p", String(port)], { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "" } });
+const server = spawn("npm", ["run", "start", "--", "-p", String(port)], { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "test-only-placeholder-not-a-real-key" } });
 let output = "";
 server.stdout.on("data", data => { output += data.toString(); });
 server.stderr.on("data", data => { output += data.toString(); });
