@@ -565,3 +565,60 @@ Pour toute nouvelle fonction, poser quatre questions :
 4. Peut-on éviter une saisie supplémentaire ?
 
 Si la fonction ne réduit ni la dispersion de l'information, ni la ressaisie, ni la charge de coordination, elle n'est probablement pas prioritaire.
+
+
+## 22. Organisation du travail : objets distincts
+
+Boralog ne doit pas devenir une gigantesque liste de tâches. Quatre notions restent distinctes :
+
+- **Événement / date** : représentation, répétition, rendez-vous professionnel ou autre événement planifié. Il possède une date/heure et appartient au contexte réel du projet.
+- **Tâche** : travail qui doit réellement être accompli. Elle peut être liée à un projet et éventuellement à un événement, avoir un responsable, une échéance, un état et une priorité raisonnable.
+- **Attention** : signal présenté à une personne parce qu'une situation mérite son attention. Une attention peut venir d'une tâche, mais aussi d'une information manquante, d'un changement, d'une réponse attendue ou d'un problème sur une date. Elle n'est donc pas nécessairement une tâche créée manuellement.
+- **Échéance** : date avant laquelle une action doit être accomplie. Elle ne doit jamais être confondue avec la date de l'événement concerné.
+
+Principe : **les données vivent dans leur contexte → Boralog détermine ce qui demande de l'attention → Aujourd'hui le fait remonter.** L'utilisateur ne doit pas transformer chaque information en tâche pour que Boralog reste utile.
+
+Une future vue calendrier réunira événements, répétitions/rendez-vous et échéances utiles sans les fusionner. Le calendrier est une représentation temporelle de ces objets, jamais leur stockage métier principal.
+
+
+## 23. Information contextualisée et entrée depuis l'extérieur
+
+Une information Boralog n'est pas un texte isolé : elle appartient à un **contexte**. Selon le cas, ce contexte comprend notamment la structure, le projet/spectacle, la date, le domaine et les personnes concernées. Une information de référence peut ensuite être représentée dans plusieurs vues sans être dupliquée comme plusieurs vérités incompatibles.
+
+Une information nouvelle ou modifiée qui concerne une personne peut être portée à sa connaissance dans **Aujourd'hui** avec son projet, sa date éventuelle, son domaine et sa fraîcheur. Cela ne transforme pas automatiquement cette information en tâche. **Information ≠ attention ≠ tâche** : l'information décrit la réalité ; l'attention signale qu'elle mérite explicitement la vigilance de la personne ; la tâche existe lorsqu'un travail doit réellement être accompli.
+
+### Futur point d'entrée par partage mobile
+
+Boralog devra pouvoir recevoir du texte, des liens ou des fichiers partagés depuis des applications extérieures, par exemple un SMS ou WhatsApp : **contenu reçu → choix/confirmation du projet → date éventuelle → domaine → confirmation → information Boralog**.
+
+Cette capacité n'est pas encore implémentée. Boralog ne doit pas aspirer silencieusement les conversations extérieures ni transformer une suggestion de classement en vérité. Une classification automatique future peut proposer un contexte avec un niveau de confiance approprié ; lorsque le contexte est incertain, la confirmation humaine reste la référence.
+
+
+## 24. Confiance dans les actions et confidentialité de l'information
+
+### 24.1 Aucune action importante ne doit être silencieuse
+
+Lorsqu'une action déclenche réellement une mutation ou un traitement perceptible, Boralog doit rendre son état compréhensible : **pending → succès ou erreur**. Selon le contexte, cela peut prendre la forme d'un libellé temporaire (« Enregistrement… »), d'une désactivation raisonnable empêchant le double envoi, d'un chargement de contenu, puis d'une confirmation sobre. Une erreur doit être explicite, proposer une nouvelle tentative lorsque c'est pertinent et conserver la saisie lorsque cela est raisonnablement possible.
+
+Ce principe ne justifie pas d'ajouter artificiellement un spinner à une navigation instantanée : le feedback doit correspondre à une attente ou une mutation réelle.
+
+### 24.2 Confidentialité au niveau de chaque information
+
+Le stockage d'une information dans Boralog ne lui donne jamais une visibilité implicite auprès de tous les membres d'une même structure ou d'un même projet. Chaque information doit pouvoir porter une politique de visibilité explicite, adaptée au besoin réel. Le modèle cible doit pouvoir exprimer des accès tels que membres concernés, équipe/rôle, personnes choisies, administration ou accès restreint, sans figer cette liste comme schéma définitif.
+
+Lorsque la confidentialité est pertinente, l'utilisateur doit comprendre **avant l'enregistrement** qui pourra voir l'information, par exemple « Visible par : équipe Logistique » ou « Visible par : Camille et Léa ».
+
+Les informations sensibles suivent un principe **deny-by-default** : aucun accès ne doit être déduit de la seule appartenance à la même structure. La confidentialité doit être garantie côté serveur et base de données par les permissions appropriées ; masquer une donnée dans l'interface n'est jamais une protection suffisante.
+
+Le futur formulaire de création d'information prévoit au minimum **contenu, contexte, domaine, visibilité**. Responsable et échéance ne s'ajoutent que si le contenu devient réellement une tâche. Le futur flux de partage externe doit lui aussi faire confirmer la visibilité lorsque nécessaire avant l'enregistrement.
+
+
+## 25. Place de référence et vues contextuelles
+
+Chaque objet métier possède une **place de référence** et n'existe qu'une fois. Une tâche, une information, une date, un document ou une conversation peut être relié à une structure, un projet/spectacle et, lorsque pertinent, une date. Ces relations déterminent les endroits où l'objet peut être présenté ; elles ne créent pas de copies.
+
+La hiérarchie **structure → projet → date → objets pertinents** décrit le contexte métier, pas un parcours de navigation obligatoire. L'utilisateur peut atteindre les mêmes objets depuis les vues transversales : Aujourd'hui, Recherche, Toutes les tâches, Calendrier ou Messages.
+
+Principe : **chaque chose a une place de référence ; chaque écran montre ce qui est utile dans son contexte ; la Recherche permet de retrouver le reste ; Aujourd'hui fait remonter ce qui mérite l'attention.**
+
+Ainsi, une tâche « Réserver l'hôtel » rattachée à un projet, une date, un responsable et une échéance reste un objet unique même si elle est représentée dans Aujourd'hui, Toutes les tâches, le projet, la date et le Calendrier. Les pages Projet et Date privilégient un résumé compact et un approfondissement volontaire plutôt que la répétition de gros modules.

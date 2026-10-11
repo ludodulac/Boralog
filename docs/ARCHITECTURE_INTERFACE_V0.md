@@ -296,3 +296,81 @@ Sur téléphone et ordinateur, vérifier :
 - le produit semble-t-il professionnel plutôt que générique ?
 
 Une maquette visuellement jolie mais qui échoue à ces scénarios n'est pas validée.
+
+
+## 15. Travail, attentions et calendrier
+
+La navigation et les écrans doivent préserver quatre objets conceptuellement différents :
+
+- un **événement/date** appartient au projet et représente quelque chose de planifié ;
+- une **tâche** représente un travail à accomplir ;
+- une **attention** est une remontée contextuelle dans Aujourd'hui et peut exister sans tâche ;
+- une **échéance** appartient à une tâche et indique avant quand agir ; elle est indépendante de la date d'un spectacle.
+
+La vue « Toutes les tâches » peut organiser simplement le travail par état ou horizon, tout en montrant le projet, la date liée lorsqu'elle existe, le responsable et l'échéance.
+
+Le **calendrier** est une projection chronologique. Il peut réunir dates de spectacle, répétitions, rendez-vous, échéances de tâches et autres événements professionnels pertinents, avec une distinction visuelle explicite entre leur nature. Sur téléphone, la forme privilégiée est une chronologie lisible plutôt qu'une grille mensuelle comprimée.
+
+Le calendrier ne devient pas une nouvelle source de vérité : les événements restent des événements et les échéances restent rattachées aux tâches.
+
+
+## 16. Colonne vertébrale de l'information
+
+Le chemin métier navigable de référence est :
+
+**Projets → spectacle/projet → date → informations par domaine.**
+
+Une information possède un contexte explicite pouvant comprendre : structure, projet, date, domaine et personnes concernées. Les domaines servent à retrouver naturellement l'information (par exemple Horaires, Équipe, Transport, Hébergement, Technique, Administration/Contrat) ; ils ne doivent pas devenir une forêt de modules artificiels.
+
+La même information de référence peut être représentée sur sa page date, dans une synthèse projet, dans la recherche ou dans Aujourd'hui. Ces représentations ne créent pas de copies métier divergentes.
+
+Les informations récentes pertinentes peuvent apparaître dans Aujourd'hui avec leur contexte et leur fraîcheur, sans créer automatiquement une tâche.
+
+Un futur point d'entrée de partage depuis le téléphone devra pouvoir recevoir un contenu externe puis demander à l'utilisateur de confirmer projet, date et domaine avant enregistrement. Aucun partage Android/iOS n'est implémenté dans le prototype actuel.
+
+
+## 17. Contrat d'interaction et confidentialité des informations
+
+### Feedback des actions
+
+Les composants de mutation doivent être conçus avec des états explicites : **idle, pending, success, error**. Le pending reflète un traitement réel et peut désactiver temporairement l'action pour prévenir un double envoi. Les chargements de contenu disposent d'un état loading/skeleton. Le succès est confirmé sobrement ; l'erreur reste visible, permet une nouvelle tentative lorsque pertinente et ne détruit pas inutilement la saisie.
+
+Les transitions de navigation immédiates ne doivent pas recevoir artificiellement un spinner.
+
+### Contrat futur de création d'une information
+
+Le composant/formulaire de création d'information doit pouvoir recueillir et afficher avant validation :
+
+**CONTENU → CONTEXTE → DOMAINE → VISIBILITÉ**
+
+Puis, uniquement lorsqu'un travail réel est créé :
+
+**RESPONSABLE → ÉCHÉANCE**
+
+La visibilité appartient à l'information elle-même. Son modèle doit pouvoir cibler différentes audiences (par exemple membres concernés, équipe/rôle, personnes sélectionnées, administration ou accès restreint) sans considérer cette liste comme le schéma final.
+
+L'appartenance à une structure ou à un projet n'accorde jamais implicitement la lecture de toutes ses informations. Les informations sensibles sont **deny-by-default**.
+
+L'interface explique l'audience avant enregistrement, mais l'autorisation effective doit être appliquée côté serveur et base de données. La future architecture Supabase/RLS devra empêcher qu'un utilisateur non autorisé puisse récupérer ou modifier l'information, indépendamment de ce que l'interface affiche.
+
+Le futur point d'entrée par partage externe utilise ce même contrat : après choix/confirmation du contexte et du domaine, la visibilité est confirmée lorsque nécessaire avant l'enregistrement. Aucun mécanisme de partage mobile ni aucune règle RLS correspondante n'est implémenté à ce stade.
+
+
+## 18. Relations contextuelles et projections
+
+Le modèle d'interface distingue **stockage de référence** et **projection UX**. Une tâche ou une information est un objet unique relié par identifiants à son projet et, si nécessaire, à sa date. Les écrans consomment ces relations au lieu de maintenir des collections métier parallèles.
+
+Les pages Projet et Date exposent uniquement un résumé compact des tâches pertinentes et un accès à une vue contextualisée. La vue transversale Toutes les tâches reste la représentation complète du travail ; Aujourd'hui reste la vue d'attention ; Calendrier reste la projection temporelle ; Recherche et Messages restent des accès transversaux.
+
+Convention du prototype : la vue existante /aujourdhui/a-faire accepte un contexte par paramètres projet, puis éventuellement date. Elle affiche explicitement ce contexte et son lien de retour. Cette convention est une représentation UX ; elle ne crée ni nouvelle tâche ni nouveau stockage.
+
+Règle structurante : **une place de référence, plusieurs représentations ; jamais une copie métier par écran.**
+
+
+## 19. App shell et absence d'impasse
+
+Les routes internes partagent un **AppShell** unique qui porte la navigation globale et le menu secondaire. Les pages métier fournissent leur contenu et leur navigation contextuelle sans recopier manuellement la navigation principale.
+
+Règle : **une page interne ne doit pas devenir une impasse de navigation**. L'utilisateur conserve simultanément son contexte local et l'accès direct aux destinations principales. La profondeur structure → projet → date → objet ne doit jamais obliger à remonter manuellement toute l'arborescence.
+
+Le shell est responsive : navigation principale stable à gauche sur ordinateur ; cinq destinations en navigation basse sur téléphone avec safe area et espace de contenu suffisant. Les barres du navigateur, contrôles système et outils de Deploy Preview sont extérieurs à Boralog et ne doivent faire l'objet d'aucun contournement CSS.
