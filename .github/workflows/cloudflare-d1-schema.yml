@@ -1,0 +1,28 @@
+name: Cloudflare D1 schema validation
+on:
+  push:
+    branches: [feat/cloudflare-exit-001]
+    paths:
+      - 'migration/cloudflare/**'
+      - '.github/workflows/cloudflare-d1-schema.yml'
+  workflow_dispatch:
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate D1-compatible SQL and foreign keys
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          sql = Path('migration/cloudflare/0001_boralog_core.sql').read_text()
+          db = sqlite3.connect(':memory:')
+          db.executescript(sql)
+          tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+          required = {'organizations','profiles','organization_memberships','projects','project_memberships','events','messages','informations','tasks','companies','people','person_companies','message_recipients','message_reads','message_notes','message_status_history','information_message_sources','task_message_sources','recipient_groups','recipient_group_members'}
+          assert required <= tables, required - tables
+          assert db.execute('PRAGMA foreign_keys').fetchone()[0] == 1
+          assert db.execute('PRAGMA foreign_key_check').fetchall() == []
+          print(f'OK: {len(required)} core tables, foreign keys enabled, no integrity errors')
+          PY
