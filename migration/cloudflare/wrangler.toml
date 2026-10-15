@@ -1,0 +1,10 @@
+name = "boralog-staging"
+main = "worker.mjs"
+compatibility_date = "2026-10-01"
+workers_dev = true
+# Deploy only after binding a NEW D1 database dedicated to Boralog.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "boralog-staging"
+# database_id = "<CREATE_NEW_D1_DATABASE_ID>"
+# Set BORALOG_BOOTSTRAP_TOKEN as a Cloudflare Worker secret.
