@@ -1,0 +1,50 @@
+name: Deploy BORALOG to Cloudflare staging
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging:
+        description: 'Type DEPLOY_BORALOG_STAGING (never production)'
+        required: true
+        type: string
+jobs:
+  deploy:
+    if: ${{ inputs.confirm_staging == 'DEPLOY_BORALOG_STAGING' }}
+    runs-on: ubuntu-latest
+    environment: boralog-staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require Cloudflare staging configuration
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          D1_ID: ${{ vars.BORALOG_STAGING_D1_ID }}
+        run: |
+          test -n "$CF_TOKEN" || { echo 'Missing CLOUDFLARE_API_TOKEN'; exit 1; }
+          test -n "$CF_ACCOUNT" || { echo 'Missing CLOUDFLARE_ACCOUNT_ID'; exit 1; }
+          test -n "$D1_ID" || { echo 'Missing BORALOG_STAGING_D1_ID'; exit 1; }
+      - name: Generate temporary Wrangler config
+        env:
+          D1_ID: ${{ vars.BORALOG_STAGING_D1_ID }}
+        run: |
+          cat > migration/cloudflare/wrangler.deploy.toml <<EOF
+          name = "boralog-staging"
+          main = "worker.mjs"
+          compatibility_date = "2026-10-01"
+          workers_dev = true
+          [[d1_databases]]
+          binding = "DB"
+          database_name = "boralog-staging"
+          database_id = "$D1_ID"
+          EOF
+      - name: Apply schema to staging D1
+        working-directory: migration/cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4 d1 execute boralog-staging --remote --config wrangler.deploy.toml --file 0001_boralog_core.sql
+      - name: Deploy staging Worker only
+        working-directory: migration/cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4 deploy --config wrangler.deploy.toml
