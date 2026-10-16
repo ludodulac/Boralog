@@ -15,16 +15,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Require Cloudflare staging configuration
         env:
-          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          D1_ID: ${{ vars.BORALOG_STAGING_D1_ID }}
+          CF_TOKEN: ${{ secrets.BORALOG_STAGING_CF_API_TOKEN }}
+          CF_ACCOUNT: ${{ vars.BORALOG_STAGING_CF_ACCOUNT_ID }}
+          D1_ID: 5e93b6a0-502f-4e22-ab31-aca64d7eeb75
         run: |
           test -n "$CF_TOKEN" || { echo 'Missing CLOUDFLARE_API_TOKEN'; exit 1; }
           test -n "$CF_ACCOUNT" || { echo 'Missing CLOUDFLARE_ACCOUNT_ID'; exit 1; }
           test -n "$D1_ID" || { echo 'Missing BORALOG_STAGING_D1_ID'; exit 1; }
       - name: Generate temporary Wrangler config
         env:
-          D1_ID: ${{ vars.BORALOG_STAGING_D1_ID }}
+          D1_ID: 5e93b6a0-502f-4e22-ab31-aca64d7eeb75
         run: |
           cat > migration/cloudflare/wrangler.deploy.toml <<EOF
           name = "boralog-staging"
@@ -39,12 +39,12 @@ jobs:
       - name: Apply schema to staging D1
         working-directory: migration/cloudflare
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.BORALOG_STAGING_CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.BORALOG_STAGING_CF_ACCOUNT_ID }}
         run: npx --yes wrangler@4 d1 execute boralog-staging --remote --config wrangler.deploy.toml --file 0001_boralog_core.sql
       - name: Deploy staging Worker only
         working-directory: migration/cloudflare
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.BORALOG_STAGING_CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.BORALOG_STAGING_CF_ACCOUNT_ID }}
         run: npx --yes wrangler@4 deploy --config wrangler.deploy.toml
