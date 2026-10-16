@@ -1,0 +1,12 @@
+name = "boralog-staging"
+main = "worker.mjs"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "boralog-staging"
+database_id = "5e93b6a0-502f-4e22-ab31-aca64d7eeb75"
+
+# Set BORALOG_BOOTSTRAP_TOKEN with: wrangler secret put BORALOG_BOOTSTRAP_TOKEN
+# Staging only. Never bind to a production Worker.

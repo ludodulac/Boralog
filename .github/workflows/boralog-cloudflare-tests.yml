@@ -1,0 +1,26 @@
+name: Boralog Cloudflare staging tests
+on:
+  push:
+    branches: [feat/cloudflare-exit-001]
+    paths: ['migration/cloudflare/**', '.github/workflows/boralog-cloudflare-tests.yml']
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Worker syntax
+        run: node --check migration/cloudflare/worker.mjs
+      - name: Check schema in SQLite
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          db=sqlite3.connect(':memory:')
+          db.executescript(Path('migration/cloudflare/0001_boralog_core.sql').read_text())
+          tables={r[0] for r in db.execute("select name from sqlite_master where type='table'")}
+          expected={'organizations','profiles','organization_memberships','projects','project_memberships','events','messages','informations','tasks','companies','people','person_companies','message_recipients','message_reads','message_notes','message_status_history','information_message_sources','task_message_sources','recipient_groups','recipient_group_members'}
+          assert expected <= tables
+          assert db.execute('pragma foreign_keys').fetchone()[0] == 1
+          print('20 Boralog core tables validated')
+          PY
