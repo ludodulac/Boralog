@@ -20,3 +20,12 @@ Dernière vérification : 2026-10-16.
 - Ne jamais fusionner ni couper Supabase avant validation du frontend, de l'API, des permissions, des sauvegardes et du retour arrière.
 - Ne jamais exposer de token API Cloudflare dans le dépôt ou la conversation.
 - Ne jamais réutiliser la D1 Célébrations.
+
+## Décision d'architecture confirmée par l'utilisateur (2026-10-16)
+- **Conserver** les projets Supabase « La forêt enchantée » et « IN-SECT » (2 projets actifs au total après fermeture de BORALOG).
+- **Ne pas migrer** les autres services de La forêt enchantée vers Cloudflare pour le moment.
+- La migration des médias de Célébrations est un chantier distinct : ne pas confondre copie de fichiers R2 et bascule complète de Célébrations.
+- **Fermer seulement** le projet Supabase BORALOG, après sauvegarde et contrôle des dépendances.
+- Le dépôt GitHub `ludodulac/Wikignose` décrit explicitement une application statique autonome sans Supabase ; cela diminue le risque des deux tables Wikignose résiduelles, mais ne prouve pas qu'aucun autre outil ne les utilise.
+- Le dépôt `ludodulac/Boralog` est pour l'instant un projet de documentation/prototype : le fichier `docs/ARCHITECTURE_INTERFACE_V0.md` indique que le premier prototype est **encore à construire**. Ne pas annoncer une application complète déjà migrée.
+- Passer de trois à deux projets ne résilie **pas automatiquement** l'abonnement Supabase Pro : contrôler les limites Free et demander explicitement la rétrogradation du plan après vérification.
